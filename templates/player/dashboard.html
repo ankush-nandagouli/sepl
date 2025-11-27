@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+
+{% block title %}Player Dashboard - SEPL{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .profile-picture {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .profile-picture-placeholder {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 5px solid white;
+        font-size: 4rem;
+    }
+    
+    .status-badge {
+        font-size: 1.1rem;
+        padding: 8px 20px;
+        border-radius: 20px;
+    }
+    
+    .info-item {
+        background: rgba(255,255,255,0.1);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .info-item strong {
+        display: inline-block;
+        min-width: 150px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <h2 class="mb-4">
+        <i class="bi bi-person-circle"></i> Player Dashboard
+    </h2>
+    
+    {% if not player %}
+        <div class="alert alert-info">
+            <h4><i class="bi bi-info-circle"></i> Registration Required</h4>
+            <p>You haven't registered as a player yet. Complete your player registration to participate in the auction.</p>
+            <a href="{% url 'player_registration' %}" class="btn btn-primary">
+                <i class="bi bi-clipboard-plus"></i> Register as Player
+            </a>
+        </div>
+    {% else %}
+        <!-- Profile Card -->
+        <div class="profile-card">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="profile-picture">
+                    {% else %}
+                        <div class="profile-picture-placeholder">
+                            <i class="bi bi-person"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-9">
+                    <h3 class="mb-3">{{ user.get_full_name }}</h3>
+                    
+                    <div class="mb-3">
+                        <span class="status-badge 
+                            {% if player.status == 'approved' %}bg-success
+                            {% elif player.status == 'sold' %}bg-primary
+                            {% elif player.status == 'pending' %}bg-warning text-dark
+                            {% elif player.status == 'rejected' %}bg-danger
+                            {% else %}bg-secondary{% endif %}">
+                            <i class="bi bi-circle-fill"></i> {{ player.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <strong><i class="bi bi-star"></i> Category:</strong>
+                                {{ player.get_category_display }}
+                            </div>
+                            
+                            {% if user.player_type == 'student' %}
+                                <div class="info-item">
+                                    <strong><i class="bi bi-book"></i> Course:</strong>
+                                    {{ user.get_course_display }}
+                                </div>
+                                
+                                {% if user.roll_number %}
+                                <div class="info-item">
+                                    <strong><i class="bi bi-card-text"></i> Roll Number:</strong>
+                                    {{ user.roll_number }}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="info-item">
+                                    <strong><i class="bi bi-calendar"></i> Year:</strong>
+                                    {{ user.get_year_of_study_display }}
+                                </div>
+                            {% endif %}
+                            
+                            {% if user.branch %}
+                            <div class="info-item">
+                                <strong><i class="bi bi-building"></i> Branch:</strong>
+                                {{ user.get_branch_display }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {% if player.batting_style %}
+                            <div class="info-item">
+                                <strong><i class="bi bi-trophy"></i> Batting:</strong>
+                                {{ player.batting_style }}
+                            </div>
+                            {% endif %}
+                            
+                            {% if player.bowling_style %}
+                            <div class="info-item">
+                                <strong><i class="bi bi-circle"></i> Bowling:</strong>
+                                {{ player.bowling_style }}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="info-item">
+                                <strong><i class="bi bi-cash"></i> Base Price:</strong>
+                                ₹{{ player.base_price }}
+                            </div>
+                            
+                            {% if player.team %}
+                            <div class="info-item">
+                                <strong><i class="bi bi-people"></i> Team:</strong>
+                                {{ player.team.name }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Messages -->
+        {% if player.status == 'pending' %}
+        <div class="alert alert-warning">
+            <i class="bi bi-clock-history"></i> Your registration is pending approval. You'll be notified once approved.
+        </div>
+        {% elif player.status == 'rejected' %}
+        <div class="alert alert-danger">
+            <i class="bi bi-x-circle"></i> Your registration was rejected. Please contact the administrator for more information.
+        </div>
+        {% elif player.status == 'approved' %}
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i> You're approved and ready for auction!
+        </div>
+        {% elif player.status == 'sold' %}
+        <div class="alert alert-primary">
+            <i class="bi bi-trophy-fill"></i> Congratulations! You've been bought by <strong>{{ player.team.name }}</strong> for ₹{{ player.current_bid }}!
+        </div>
+        {% elif player.status == 'unsold' %}
+        <div class="alert alert-secondary">
+            <i class="bi bi-dash-circle"></i> You weren't sold in this auction round. You may be included in future rounds.
+        </div>
+        {% endif %}
+        
+        <!-- Recent Bids -->
+        {% if recent_bids %}
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Bids on You</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Amount</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bid in recent_bids %}
+                            <tr>
+                                <td>
+                                    <strong>{{ bid.team.name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">₹{{ bid.amount }}</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ bid.timestamp|timesince }} ago</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

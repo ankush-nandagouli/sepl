@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+
+{% block title %}Team Owner Dashboard - SEPL{% endblock %}
+
+{% block extra_css %}
+<style>
+    .team-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+    
+    .player-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    
+    .player-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        text-align: center;
+    }
+    
+    .player-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .player-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 15px;
+        display: block;
+        border: 4px solid var(--primary-color);
+    }
+    
+    .player-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: white;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: 4px solid var(--primary-color);
+    }
+    
+    .player-name {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .player-category {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+    
+    .player-price {
+        background: #28a745;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        display: inline-block;
+    }
+    
+    .category-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin: 2px;
+    }
+    
+    .badge-batsman { background: #ffc107; color: #000; }
+    .badge-bowler { background: #dc3545; color: #fff; }
+    .badge-all-rounder { background: #28a745; color: #fff; }
+    .badge-wicket-keeper { background: #007bff; color: #fff; }
+    
+    .no-players {
+        text-align: center;
+        padding: 50px;
+        color: #666;
+    }
+    
+    .squad-stats {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- Team Header -->
+    <div class="team-header">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center">
+                {% if team.logo %}
+                <img src="{{ team.logo.url }}" alt="{{ team.name }}" class="img-fluid rounded-circle" 
+                     style="width: 100px; height: 100px; object-fit: cover; border: 4px solid white;">
+                {% else %}
+                <div class="rounded-circle mx-auto bg-white text-primary d-flex align-items-center justify-content-center" 
+                     style="width: 100px; height: 100px; font-size: 2.5rem; font-weight: bold;">
+                    {{ team.name.0 }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-10">
+                <h2>{{ team.name }}</h2>
+                <p class="mb-0">Owner: {{ team.owner.get_full_name }}</p>
+                {% if team.manager %}
+                <p class="mb-0">Manager: {{ team.manager.get_full_name }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Team Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-value">₹{{ team.purse_remaining }}</div>
+                <div class="text-muted">Purse Remaining</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-value">₹{{ team.purse_spent }}</div>
+                <div class="text-muted">Purse Spent</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-value">{{ players.count }}</div>
+                <div class="text-muted">Total Players</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-value">{{ team.slots_remaining }}</div>
+                <div class="text-muted">Slots Remaining</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Squad Composition -->
+    {% if players %}
+    <div class="squad-stats">
+        <h5 class="mb-3"><i class="bi bi-pie-chart"></i> Squad Composition</h5>
+        <div class="row text-center">
+            <div class="col-md-3">
+                <span class="category-badge badge-batsman">🏏 Batsman</span>
+                <div class="h4 mt-2">{{ squad_stats.batsman }}</div>
+            </div>
+            <div class="col-md-3">
+                <span class="category-badge badge-bowler">⚾ Bowler</span>
+                <div class="h4 mt-2">{{ squad_stats.bowler }}</div>
+            </div>
+            <div class="col-md-3">
+                <span class="category-badge badge-all-rounder">⭐ All Rounder</span>
+                <div class="h4 mt-2">{{ squad_stats.all_rounder }}</div>
+            </div>
+            <div class="col-md-3">
+                <span class="category-badge badge-wicket-keeper">🧤 Wicket Keeper</span>
+                <div class="h4 mt-2">{{ squad_stats.wicket_keeper }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Players List -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-people"></i> My Squad ({{ players.count }}/{{ team.max_players }})</h5>
+        </div>
+        <div class="card-body">
+            {% if players %}
+            <div class="player-grid">
+                {% for player in players %}
+                <div class="player-card">
+                    {% if player.user.profile_picture %}
+                    <img src="{{ player.user.profile_picture.url }}" alt="{{ player.user.get_full_name }}" class="player-avatar">
+                    {% else %}
+                    <div class="player-placeholder">
+                        {{ player.user.first_name.0 }}{{ player.user.last_name.0 }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="player-name">{{ player.user.get_full_name }}</div>
+                    
+                    <div class="player-category">
+                        <span class="category-badge badge-{{ player.category }}">
+                            {% if player.category == 'batsman' %}🏏
+                            {% elif player.category == 'bowler' %}⚾
+                            {% elif player.category == 'all_rounder' %}⭐
+                            {% elif player.category == 'wicket_keeper' %}🧤
+                            {% endif %}
+                            {{ player.get_category_display }}
+                        </span>
+                    </div>
+                    
+                    {% if player.user.player_type == 'student' %}
+                    <div class="text-muted small mb-2">
+                        {% if player.user.roll_number %}{{ player.user.roll_number }}<br>{% endif %}
+                        {{ player.user.get_course_display|default:"" }}
+                        {% if player.user.year_of_study %}- {{ player.user.get_year_of_study_display }}{% endif %}
+                    </div>
+                    {% elif player.user.player_type == 'faculty' %}
+                    <div class="text-muted small mb-2">
+                        Faculty<br>
+                        {{ player.user.get_branch_display|default:"" }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if player.batting_style or player.bowling_style %}
+                    <div class="text-muted small mb-2">
+                        {% if player.batting_style %}🏏 {{ player.batting_style }}<br>{% endif %}
+                        {% if player.bowling_style %}⚾ {{ player.bowling_style }}{% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="player-price">₹{{ player.current_bid }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-players">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                <h4 class="mt-3">No Players Yet</h4>
+                <p>You haven't bought any players yet. Join the live auction to build your squad!</p>
+                <a href="{% url 'live_auction' %}" class="btn btn-primary mt-3">
+                    <i class="bi bi-broadcast"></i> Go to Live Auction
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Recent Bids -->
+    {% if recent_bids %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Bids</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Player</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bid in recent_bids %}
+                        <tr>
+                            <td>{{ bid.timestamp|date:"M d, Y h:i A" }}</td>
+                            <td>{{ bid.player.user.get_full_name }}</td>
+                            <td>₹{{ bid.amount }}</td>
+                            <td>
+                                {% if bid.player.team == team %}
+                                <span class="badge bg-success">Won</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Outbid</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5>Quick Actions</h5>
+                    <a href="{% url 'live_auction' %}" class="btn btn-primary btn-lg me-2">
+                        <i class="bi bi-broadcast"></i> Join Live Auction
+                    </a>
+                    <a href="{% url 'owner_dashboard' %}" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh Squad
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

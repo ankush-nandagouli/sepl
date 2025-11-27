@@ -1,0 +1,167 @@
+<!-- templates/admin/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - SEPL{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <h2 class="mb-4">
+        <i class="bi bi-gear-fill"></i> Admin Dashboard
+    </h2>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-people-fill"></i> Total Teams</h5>
+                    <h2>{{ total_teams }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-person-check-fill"></i> Approved Players</h5>
+                    <h2>{{ approved_players }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-clock-fill"></i> Pending Players</h5>
+                    <h2>{{ pending_players }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5><i class="bi bi-cart-check-fill"></i> Players Sold</h5>
+                    <h2>{{ sold_players }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning-fill"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'manage_teams' %}" class="btn btn-primary me-2">
+                        <i class="bi bi-shield-plus"></i> Manage Teams
+                    </a>
+                    <a href="{% url 'manage_players' %}" class="btn btn-success me-2">
+                        <i class="bi bi-person-lines-fill"></i> Manage Players
+                    </a>
+                    <a href="{% url 'manage_auction' %}" class="btn btn-warning me-2">
+                        <i class="bi bi-hammer"></i> Manage Auction
+                    </a>
+                    {% if active_session %}
+                    <a href="{% url 'auction_control' %}" class="btn btn-danger">
+                        <i class="bi bi-broadcast"></i> Auction Control Room
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teams Overview -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-shield-fill-check"></i> Teams Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Team Name</th>
+                                    <th>Owner</th>
+                                    <th>Players</th>
+                                    <th>Purse Remaining</th>
+                                    <th>Purse Spent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for team in teams %}
+                                <tr>
+                                    <td><strong>{{ team.name }}</strong></td>
+                                    <td>{{ team.owner.get_full_name }}</td>
+                                    <td>{{ team.player_count }}</td>
+                                    <td>₹{{ team.purse_remaining }}</td>
+                                    <td>₹{{ team.purse_spent }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No teams yet</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Auction Results -->
+    {% if recent_logs %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Auction Results</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Team</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_logs %}
+                                <tr>
+                                    <td>{{ log.player.user.get_full_name }}</td>
+                                    <td>
+                                        {% if log.sold %}
+                                            {{ log.winning_team.name }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>₹{{ log.final_amount }}</td>
+                                    <td>
+                                        {% if log.sold %}
+                                            <span class="badge bg-success">SOLD</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">UNSOLD</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ log.timestamp|timesince }} ago</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

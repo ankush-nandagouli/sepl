@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Manage Auction - SEPL{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <h2 class="mb-4"><i class="bi bi-hammer"></i> Manage Auction Sessions</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Create Auction Session</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <button type="submit" class="btn btn-primary w-100 mt-3">
+                            <i class="bi bi-plus-circle"></i> Create Session
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            {% if active_session %}
+            <div class="card mt-3 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-broadcast"></i> Active Session</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h4>{{ active_session.name }}</h4>
+                    <p class="mb-0">Started: {{ active_session.started_at|timesince }} ago</p>
+                    <a href="{% url 'auction_control' %}" class="btn btn-danger btn-lg mt-3 w-100">
+                        <i class="bi bi-broadcast"></i> Go to Control Room
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Auction Sessions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Session Name</th>
+                                    <th>Status</th>
+                                    <th>Started</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in sessions %}
+                                <tr>
+                                    <td><strong>{{ session.name }}</strong></td>
+                                    <td>
+                                        {% if session.status == 'live' %}
+                                            <span class="badge bg-danger">LIVE</span>
+                                        {% elif session.status == 'upcoming' %}
+                                            <span class="badge bg-info">Upcoming</span>
+                                        {% elif session.status == 'paused' %}
+                                            <span class="badge bg-warning">Paused</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Completed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if session.started_at %}
+                                            {{ session.started_at|date:"M d, Y H:i" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if session.status == 'upcoming' %}
+                                            <a href="{% url 'start_auction_session' session.id %}" 
+                                               class="btn btn-sm btn-success">
+                                                <i class="bi bi-play-fill"></i> Start
+                                            </a>
+                                        {% elif session.status == 'live' %}
+                                            <a href="{% url 'auction_control' %}" 
+                                               class="btn btn-sm btn-danger">
+                                                <i class="bi bi-broadcast"></i> Control
+                                            </a>
+                                            <a href="{% url 'end_auction_session' session.id %}" 
+                                               class="btn btn-sm btn-secondary">
+                                                <i class="bi bi-stop-fill"></i> End
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No sessions created yet</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Available Players for Auction -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-people-fill"></i> Available Players for Auction</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Total approved players ready for auction: <strong>{{ available_players.count }}</strong></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

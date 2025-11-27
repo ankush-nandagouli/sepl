@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Register - SEPL{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .form-section h5 {
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        border-bottom: 2px solid var(--accent-color);
+        padding-bottom: 10px;
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: red;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="text-center mb-4">
+                <i class="bi bi-person-plus"></i> Register for SEPL
+            </h2>
+            
+            <!-- Display messages -->
+            {% if messages %}
+            <div class="messages mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="post" enctype="multipart/form-data" id="registrationForm">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h5><i class="bi bi-person"></i> Basic Information</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label required-field">Username</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                {% for error in form.username.errors %}
+                                    <span class="error-message">{{ error }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label required-field">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                {% for error in form.email.errors %}
+                                    <span class="error-message">{{ error }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label required-field">First Name</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                {% for error in form.first_name.errors %}
+                                    <span class="error-message">{{ error }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label required-field">Last Name</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                {% for error in form.last_name.errors %}
+                                    <span class="error-message">{{ error }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label required-field">Password</label>
+                            {{ form.password }}
+                            {% if form.password.errors %}
+                                {% for error in form.password.errors %}
+                                    <span class="error-message">{{ error }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.confirm_password.id_for_label }}" class="form-label required-field">Confirm Password</label>
+                            {{ form.confirm_password }}
+                            {% if form.confirm_password.errors %}
+                                {% for error in form.confirm_password.errors %}
+                                    <span class="error-message">{{ error }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label">Phone</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                {% for error in form.phone.errors %}
+                                    <span class="error-message">{{ error }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.college.id_for_label }}" class="form-label">College</label>
+                            {{ form.college }}
+                            {% if form.college.errors %}
+                                {% for error in form.college.errors %}
+                                    <span class="error-message">{{ error }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
+                        {{ form.profile_picture }}
+                        {% if form.profile_picture.errors %}
+                            {% for error in form.profile_picture.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                        <small class="form-text text-muted d-block">Optional - Upload your photo</small>
+                    </div>
+                </div>
+                
+                <!-- User Type -->
+                <div class="form-section">
+                    <h5><i class="bi bi-people"></i> User Type</h5>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.user_type.id_for_label }}" class="form-label required-field">I am registering as</label>
+                        {{ form.user_type }}
+                        {% if form.user_type.errors %}
+                            {% for error in form.user_type.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Player Details - ALWAYS VISIBLE, NO HIDING -->
+                <div class="form-section">
+                    <h5><i class="bi bi-person-badge"></i> Player Details (Optional - Fill if you're a Player)</h5>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.player_type.id_for_label }}" class="form-label">Player Type</label>
+                        {{ form.player_type }}
+                        {% if form.player_type.errors %}
+                            {% for error in form.player_type.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                        <small class="form-text text-muted d-block">Select if you're a student or faculty player</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.roll_number.id_for_label }}" class="form-label">Roll Number</label>
+                        {{ form.roll_number }}
+                        {% if form.roll_number.errors %}
+                            {% for error in form.roll_number.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                        <small class="form-text text-muted d-block">Format: 0242CS221003 (Optional)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.course.id_for_label }}" class="form-label">Course</label>
+                        {{ form.course }}
+                        {% if form.course.errors %}
+                            {% for error in form.course.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                        <small class="form-text text-muted d-block">Select your course (for students)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.branch.id_for_label }}" class="form-label">Branch/Department</label>
+                        {{ form.branch }}
+                        {% if form.branch.errors %}
+                            {% for error in form.branch.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                        <small class="form-text text-muted d-block">Select your branch or department</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.year_of_study.id_for_label }}" class="form-label">Year of Study</label>
+                        {{ form.year_of_study }}
+                        {% if form.year_of_study.errors %}
+                            {% for error in form.year_of_study.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                        <small class="form-text text-muted d-block">Select your current year (for students)</small>
+                    </div>
+                </div>
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle"></i> Register
+                    </button>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

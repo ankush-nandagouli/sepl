@@ -1,0 +1,459 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Auction - {{ team.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auction-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .team-info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .player-auction-card {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        min-height: 500px;
+    }
+    
+    .player-image {
+        width: 250px;
+        height: 250px;
+        border-radius: 15px;
+        object-fit: cover;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .player-image-placeholder {
+        width: 250px;
+        height: 250px;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 6rem;
+    }
+    
+    .bid-button {
+        font-size: 1.5rem;
+        padding: 20px;
+        font-weight: bold;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s;
+    }
+    
+    .bid-button:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    
+    .bid-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .status-live {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    .bid-history-item {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        border-left: 4px solid #3b82f6;
+        animation: slideIn 0.3s;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .my-bid {
+        border-left-color: #10b981 !important;
+        background: #d1fae5 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="auction-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-0">
+                    <i class="bi bi-broadcast status-live"></i> Live Auction
+                </h2>
+                <p class="mb-0">{{ session.name }}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="team-info-card d-inline-block">
+                    <h5 class="mb-0">{{ team.name }}</h5>
+                    <small>Your Team</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Left: Current Player Info -->
+        <div class="col-md-8">
+            <div class="player-auction-card">
+                {% if current_player %}
+                <div id="playerInfo">
+                    <div class="row">
+                        <div class="col-md-5 text-center">
+                            {% if current_player.user.profile_picture %}
+                                <img src="{{ current_player.user.profile_picture.url }}" alt="{{ current_player.user.get_full_name }}" class="player-image">
+                            {% else %}
+                                <div class="player-image-placeholder">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-7">
+                            <h2 class="mb-3">{{ current_player.user.get_full_name }}</h2>
+                            
+                            <div class="mb-3">
+                                <span class="badge bg-primary fs-6">{{ current_player.get_category_display }}</span>
+                                {% if current_player.user.player_type == 'student' %}
+                                    <span class="badge bg-info fs-6">Student</span>
+                                {% else %}
+                                    <span class="badge bg-secondary fs-6">Faculty</span>
+                                {% endif %}
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="row small">
+                                <div class="col-md-6">
+                                    {% if current_player.user.player_type == 'student' %}
+                                        {% if current_player.user.roll_number %}
+                                        <p><strong>Roll:</strong> {{ current_player.user.roll_number }}</p>
+                                        {% endif %}
+                                        <p><strong>Course:</strong> {{ current_player.user.get_course_display }}</p>
+                                        {% if current_player.user.branch %}
+                                        <p><strong>Branch:</strong> {{ current_player.user.get_branch_display }}</p>
+                                        {% endif %}
+                                        <p><strong>Year:</strong> {{ current_player.user.get_year_of_study_display }}</p>
+                                    {% else %}
+                                        <p><strong>Dept:</strong> {{ current_player.user.get_branch_display }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    {% if current_player.batting_style %}
+                                    <p><strong>Batting:</strong> {{ current_player.batting_style }}</p>
+                                    {% endif %}
+                                    {% if current_player.bowling_style %}
+                                    <p><strong>Bowling:</strong> {{ current_player.bowling_style }}</p>
+                                    {% endif %}
+                                    {% if current_player.previous_team %}
+                                    <p><strong>Previous:</strong> {{ current_player.previous_team }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="row text-center mb-4">
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Base Price</small>
+                                    <h4 class="text-primary">₹<span id="basePrice">{{ current_player.base_price }}</span></h4>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Current Bid</small>
+                                    <h4 class="text-success">₹<span id="currentBid">
+                                        {% if current_player.current_bid > 0 %}{{ current_player.current_bid }}{% else %}0{% endif %}
+                                    </span></h4>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Next Bid</small>
+                                    <h4 class="text-warning">₹<span id="nextBid">{{ current_player.base_price }}</span></h4>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button class="btn btn-success bid-button" id="bidButton" onclick="placeBid()">
+                                    <i class="bi bi-cash-stack"></i> Place Bid: ₹<span id="bidAmount">{{ current_player.base_price }}</span>
+                                </button>
+                                <small class="text-muted text-center mt-2" id="bidStatus"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-hourglass-split" style="font-size: 5rem; color: #ccc;"></i>
+                    <h3 class="mt-4">Waiting for Next Player</h3>
+                    <p class="text-muted">The auction will start soon...</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Right: Team Info & Bid History -->
+        <div class="col-md-4">
+            <!-- Team Status -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-wallet2"></i> Team Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <strong>Purse Remaining</strong>
+                            <h4 class="text-success mb-0">₹<span id="purseRemaining">{{ team.purse_remaining }}</span></h4>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ team.purse_remaining|floatformat:0|add:'0'|divisibleby:team.total_purse|yesno:'100,0' }}%"
+                                 id="purseProgress">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <small class="text-muted">Players</small>
+                            <h5 id="playerCount">{{ team.players_count }}</h5>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Slots Left</small>
+                            <h5 id="slotsLeft">{{ team.slots_remaining }}</h5>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <small class="text-muted">Total Purse: ₹{{ team.total_purse }}</small><br>
+                    <small class="text-muted">Max Players: {{ team.max_players }}</small>
+                </div>
+            </div>
+            
+            <!-- Bid History -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Bid History</h5>
+                </div>
+                <div class="card-body p-2">
+                    <div id="bidHistory" style="max-height: 400px; overflow-y: auto;">
+                        <p class="text-muted text-center">No bids yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const teamId = {{ team.id }};
+const teamName = "{{ team.name }}";
+let currentPlayerId = {{ current_player.id if current_player else 'null' }};
+let nextBidAmount = {{ current_player.base_price if current_player else 0 }};
+
+const ws = new WebSocket('ws://' + window.location.host + '/ws/auction/');
+
+ws.onopen = function() {
+    console.log('Connected to auction');
+    updateBidButton();
+};
+
+ws.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    
+    if (data.type === 'bid_update') {
+        handleBidUpdate(data.data);
+    } else if (data.type === 'player_update') {
+        handlePlayerUpdate(data.data);
+    } else if (data.type === 'bidding_end') {
+        handleBiddingEnd(data.data);
+    } else if (data.type === 'error') {
+        showError(data.message);
+    }
+};
+
+ws.onerror = function(e) {
+    console.error('WebSocket error:', e);
+    showError('Connection error. Please refresh the page.');
+};
+
+ws.onclose = function(e) {
+    console.log('WebSocket closed');
+    document.getElementById('bidButton').disabled = true;
+    document.getElementById('bidStatus').textContent = 'Connection lost. Please refresh.';
+};
+
+function placeBid() {
+    if (!currentPlayerId || nextBidAmount <= 0) {
+        showError('No player selected');
+        return;
+    }
+    
+    const button = document.getElementById('bidButton');
+    button.disabled = true;
+    
+    ws.send(JSON.stringify({
+        action: 'place_bid',
+        team_id: teamId,
+        player_id: currentPlayerId,
+        amount: nextBidAmount
+    }));
+    
+    // Re-enable button after 1 second to prevent spam
+    setTimeout(() => {
+        button.disabled = false;
+    }, 1000);
+}
+
+function handleBidUpdate(data) {
+    // Update bid amounts
+    document.getElementById('currentBid').textContent = data.amount;
+    document.getElementById('nextBid').textContent = data.next_bid;
+    document.getElementById('bidAmount').textContent = data.next_bid;
+    nextBidAmount = data.next_bid;
+    
+    // Add to bid history
+    const bidHistory = document.getElementById('bidHistory');
+    const isMyBid = data.team_id === teamId;
+    
+    const bidItem = document.createElement('div');
+    bidItem.className = 'bid-history-item' + (isMyBid ? ' my-bid' : '');
+    bidItem.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>${data.team_name}</strong>
+                ${isMyBid ? '<span class="badge bg-success ms-1">You</span>' : ''}
+            </div>
+            <span class="badge bg-primary">₹${data.amount}</span>
+        </div>
+        <small class="text-muted">Just now</small>
+    `;
+    
+    // Remove "No bids yet" message if present
+    if (bidHistory.querySelector('p')) {
+        bidHistory.innerHTML = '';
+    }
+    
+    bidHistory.insertBefore(bidItem, bidHistory.firstChild);
+    
+    // Update team status if it's my bid
+    if (isMyBid) {
+        // Purse doesn't decrease until player is sold
+        // But we can show the potential reduction
+    }
+    
+    updateBidButton();
+}
+
+function handlePlayerUpdate(data) {
+    if (data.success && data.player) {
+        // New player is being auctioned
+        currentPlayerId = data.player.id;
+        nextBidAmount = data.player.base_price;
+        
+        // Clear bid history
+        document.getElementById('bidHistory').innerHTML = '<p class="text-muted text-center">No bids yet</p>';
+        
+        // Update player display
+        location.reload(); // Simple reload for now
+    }
+}
+
+function handleBiddingEnd(data) {
+    if (data.sold) {
+        const message = `${data.player_name} SOLD to ${data.team_name} for ₹${data.amount}!`;
+        
+        if (data.team_id === teamId) {
+            showSuccess(message + ' 🎉');
+            // Update team status
+            document.getElementById('purseRemaining').textContent = data.team_purse_remaining;
+            document.getElementById('playerCount').textContent = parseInt(document.getElementById('playerCount').textContent) + 1;
+            document.getElementById('slotsLeft').textContent = data.team_slots_remaining;
+        } else {
+            showInfo(message);
+        }
+    } else {
+        showInfo(`${data.player_name} UNSOLD`);
+    }
+    
+    currentPlayerId = null;
+    updateBidButton();
+}
+
+function updateBidButton() {
+    const button = document.getElementById('bidButton');
+    const statusText = document.getElementById('bidStatus');
+    
+    if (!currentPlayerId) {
+        button.disabled = true;
+        statusText.textContent = 'Waiting for next player...';
+        return;
+    }
+    
+    const purseRemaining = parseInt(document.getElementById('purseRemaining').textContent);
+    const slotsLeft = parseInt(document.getElementById('slotsLeft').textContent);
+    
+    if (slotsLeft <= 0) {
+        button.disabled = true;
+        statusText.textContent = 'Team is full (max players reached)';
+        statusText.className = 'text-danger text-center mt-2';
+        return;
+    }
+    
+    if (purseRemaining < nextBidAmount) {
+        button.disabled = true;
+        statusText.textContent = 'Insufficient purse balance';
+        statusText.className = 'text-danger text-center mt-2';
+        return;
+    }
+    
+    button.disabled = false;
+    statusText.textContent = `Available: ₹${purseRemaining} | Slots: ${slotsLeft}`;
+    statusText.className = 'text-muted text-center mt-2';
+}
+
+function showError(message) {
+    alert('❌ ' + message);
+}
+
+function showSuccess(message) {
+    alert('✅ ' + message);
+}
+
+function showInfo(message) {
+    alert('ℹ️ ' + message);
+}
+
+// Initialize
+updateBidButton();
+</script>
+{% endblock %}

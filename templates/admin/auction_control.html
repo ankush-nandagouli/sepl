@@ -1,0 +1,490 @@
+{% extends 'base.html' %}
+
+{% block title %}Auction Control - SEPL{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auction-control-panel {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .player-search-box {
+        background: white;
+        border: 2px solid #007bff;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .search-results {
+        max-height: 400px;
+        overflow-y: auto;
+        margin-top: 15px;
+    }
+    
+    .player-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: white;
+    }
+    
+    .player-card:hover {
+        border-color: #007bff;
+        box-shadow: 0 4px 8px rgba(0,123,255,0.2);
+        transform: translateY(-2px);
+    }
+    
+    .player-card.selected {
+        border-color: #28a745;
+        background: #e8f5e9;
+    }
+    
+    .current-player-display {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .player-detail-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 5px 10px;
+        border-radius: 5px;
+        display: inline-block;
+        margin: 5px 5px 5px 0;
+        font-size: 0.9rem;
+    }
+    
+    .player-role-icon {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    
+    .bid-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .bid-item {
+        background: white;
+        border-left: 4px solid #007bff;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+    }
+    
+    .no-player-message {
+        text-align: center;
+        padding: 50px;
+        background: #fff3cd;
+        border-radius: 10px;
+        color: #856404;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">
+                <i class="bi bi-broadcast"></i> Live Auction Control
+                <span class="badge bg-danger ms-2">LIVE</span>
+            </h2>
+        </div>
+    </div>
+    
+    <!-- Player Search Section -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="player-search-box">
+                <h5><i class="bi bi-search"></i> Search Player</h5>
+                <input 
+                    type="text" 
+                    id="playerSearchInput" 
+                    class="form-control mb-3" 
+                    placeholder="Search by name, roll number, or category..."
+                    autocomplete="off"
+                >
+                
+                <div id="searchResults" class="search-results"></div>
+                
+                <div class="mt-3">
+                    <button class="btn btn-success w-100" id="startSelectedPlayer" disabled>
+                        <i class="bi bi-play-circle"></i> Start Auction for Selected Player
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Available Players List -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Available Players ({{ available_players.count }})</h6>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% for player in available_players %}
+                    <div class="player-card" 
+                         data-player-id="{{ player.id }}" 
+                         data-player-name="{{ player.user.get_full_name }}"
+                         data-batting="{{ player.batting_style|default:'' }}"
+                         data-bowling="{{ player.bowling_style|default:'' }}"
+                         data-category="{{ player.get_category_display }}">
+                        <div class="d-flex align-items-center">
+                            {% if player.user.profile_picture %}
+                            <img src="{{ player.user.profile_picture.url }}" alt="{{ player.user.get_full_name }}" 
+                                 class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle me-2 bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                 style="width: 40px; height: 40px;">
+                                {{ player.user.first_name.0 }}{{ player.user.last_name.0 }}
+                            </div>
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <strong>{{ player.user.get_full_name }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ player.get_category_display }} | ₹{{ player.base_price }}
+                                    {% if player.user.roll_number %}
+                                    | {{ player.user.roll_number }}
+                                    {% endif %}
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                    {% if player.batting_style %}🏏 {{ player.batting_style }}{% endif %}
+                                    {% if player.bowling_style %} | ⚾ {{ player.bowling_style }}{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No players available</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Current Player Display -->
+        <div class="col-md-8">
+            {% if current_player %}
+            <div class="current-player-display">
+                <div class="row align-items-center">
+                    <div class="col-md-3 text-center">
+                        {% if current_player.user.profile_picture %}
+                        <img src="{{ current_player.user.profile_picture.url }}" alt="{{ current_player.user.get_full_name }}" 
+                             class="rounded-circle" width="120" height="120" style="object-fit: cover; border: 5px solid white;">
+                        {% else %}
+                        <div class="rounded-circle mx-auto bg-white text-primary d-flex align-items-center justify-content-center" 
+                             style="width: 120px; height: 120px; font-size: 3rem; border: 5px solid white;">
+                            {{ current_player.user.first_name.0 }}{{ current_player.user.last_name.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-9">
+                        <h3>
+                            {{ current_player.user.get_full_name }}
+                            {% if current_player.category == 'batsman' %}
+                            <span class="player-role-icon">🏏</span>
+                            {% elif current_player.category == 'bowler' %}
+                            <span class="player-role-icon">⚾</span>
+                            {% elif current_player.category == 'all_rounder' %}
+                            <span class="player-role-icon">⭐</span>
+                            {% elif current_player.category == 'wicket_keeper' %}
+                            <span class="player-role-icon">🧤</span>
+                            {% endif %}
+                        </h3>
+                        
+                        <div class="mb-2">
+                            <span class="player-detail-badge">
+                                <strong>Category:</strong> {{ current_player.get_category_display }}
+                            </span>
+                            <span class="player-detail-badge">
+                                <strong>Base Price:</strong> ₹{{ current_player.base_price }}
+                            </span>
+                        </div>
+                        
+                        {% if current_player.user.player_type == 'student' %}
+                        <div class="mb-2">
+                            {% if current_player.user.roll_number %}
+                            <span class="player-detail-badge">
+                                <strong>Roll:</strong> {{ current_player.user.roll_number }}
+                            </span>
+                            {% endif %}
+                            {% if current_player.user.course %}
+                            <span class="player-detail-badge">
+                                <strong>Course:</strong> {{ current_player.user.get_course_display }}
+                            </span>
+                            {% endif %}
+                            {% if current_player.user.branch %}
+                            <span class="player-detail-badge">
+                                <strong>Branch:</strong> {{ current_player.user.get_branch_display }}
+                            </span>
+                            {% endif %}
+                            {% if current_player.user.year_of_study %}
+                            <span class="player-detail-badge">
+                                <strong>Year:</strong> {{ current_player.user.get_year_of_study_display }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% elif current_player.user.player_type == 'faculty' %}
+                        <div class="mb-2">
+                            <span class="player-detail-badge">
+                                <strong>Type:</strong> Faculty
+                            </span>
+                            {% if current_player.user.branch %}
+                            <span class="player-detail-badge">
+                                <strong>Department:</strong> {{ current_player.user.get_branch_display }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Cricket Skills -->
+                        {% if current_player.batting_style or current_player.bowling_style %}
+                        <div class="mb-2">
+                            {% if current_player.batting_style %}
+                            <span class="player-detail-badge">
+                                <strong>🏏 Batting:</strong> {{ current_player.batting_style }}
+                            </span>
+                            {% endif %}
+                            {% if current_player.bowling_style %}
+                            <span class="player-detail-badge">
+                                <strong>⚾ Bowling:</strong> {{ current_player.bowling_style }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if current_player.previous_team %}
+                        <div class="mb-2">
+                            <span class="player-detail-badge">
+                                <strong>Previous Team:</strong> {{ current_player.previous_team }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <h4 class="mb-0">Current Bid: ₹<span id="currentBidAmount">{{ current_player.current_bid }}</span></h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bidding Controls -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-danger btn-lg" onclick="endBidding({{ current_player.id }})">
+                            <i class="bi bi-stop-circle"></i> End Bidding & Sell
+                        </button>
+                        <button class="btn btn-warning btn-lg" onclick="markUnsold({{ current_player.id }})">
+                            <i class="bi bi-x-circle"></i> Mark Unsold
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current Bids -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Current Bids</h5>
+                </div>
+                <div class="card-body bid-list">
+                    {% for bid in current_bids %}
+                    <div class="bid-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ bid.team.name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ bid.timestamp|date:"h:i A" }}</small>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 text-success">₹{{ bid.amount }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No bids yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="no-player-message">
+                <i class="bi bi-info-circle" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">No Player Selected</h4>
+                <p>Search and select a player from the list to start the auction</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedPlayerId = null;
+let selectedPlayerCard = null;
+let ws = null;
+
+// Initialize WebSocket
+function initWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${protocol}//${window.location.host}/ws/auction/`);
+    
+    ws.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'player_update') {
+            // Reload page when new player starts
+            location.reload();
+        } else if (data.type === 'bid_update') {
+            // Update current bid display
+            document.getElementById('currentBidAmount').textContent = data.data.amount;
+        } else if (data.type === 'bidding_end') {
+            // Show sold message and reload
+            if (data.data.sold) {
+                alert(`SOLD to ${data.data.team_name} for ₹${data.data.amount}!`);
+            } else {
+                alert(`Player UNSOLD`);
+            }
+            setTimeout(() => location.reload(), 1500);
+        }
+    };
+    
+    ws.onerror = function(error) {
+        console.error('WebSocket Error:', error);
+    };
+}
+
+// Player Search Functionality
+document.getElementById('playerSearchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase().trim();
+    const resultsDiv = document.getElementById('searchResults');
+    
+    if (searchTerm.length < 2) {
+        resultsDiv.innerHTML = '';
+        return;
+    }
+    
+    // Filter players
+    const allPlayers = document.querySelectorAll('.player-card');
+    const matchingPlayers = [];
+    
+    allPlayers.forEach(card => {
+        const playerName = card.dataset.playerName.toLowerCase();
+        const cardText = card.textContent.toLowerCase();
+        
+        if (playerName.includes(searchTerm) || cardText.includes(searchTerm)) {
+            matchingPlayers.push(card.cloneNode(true));
+        }
+    });
+    
+    // Display results
+    if (matchingPlayers.length > 0) {
+        resultsDiv.innerHTML = '<div class="mb-2"><small class="text-muted">Found ' + matchingPlayers.length + ' player(s)</small></div>';
+        matchingPlayers.forEach(card => {
+            card.addEventListener('click', function() {
+                selectPlayer(this);
+            });
+            resultsDiv.appendChild(card);
+        });
+    } else {
+        resultsDiv.innerHTML = '<p class="text-muted text-center">No players found</p>';
+    }
+});
+
+// Select player
+function selectPlayer(card) {
+    // Remove previous selection
+    if (selectedPlayerCard) {
+        selectedPlayerCard.classList.remove('selected');
+    }
+    
+    // Also remove from original cards
+    document.querySelectorAll('.player-card').forEach(c => {
+        c.classList.remove('selected');
+    });
+    
+    // Add selection to clicked card
+    card.classList.add('selected');
+    selectedPlayerCard = card;
+    selectedPlayerId = card.dataset.playerId;
+    
+    // Enable start button
+    document.getElementById('startSelectedPlayer').disabled = false;
+}
+
+// Add click event to all player cards
+document.querySelectorAll('.player-card').forEach(card => {
+    card.addEventListener('click', function() {
+        selectPlayer(this);
+    });
+});
+
+// Start auction for selected player
+document.getElementById('startSelectedPlayer').addEventListener('click', function() {
+    if (!selectedPlayerId) {
+        alert('Please select a player first');
+        return;
+    }
+    
+    if (confirm('Start auction for this player?')) {
+        startPlayerAuction(selectedPlayerId);
+    }
+});
+
+function startPlayerAuction(playerId) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            action: 'next_player',
+            player_id: playerId
+        }));
+    } else {
+        console.error('WebSocket is not connected');
+        alert('Connection error. Please refresh the page.');
+    }
+}
+
+function endBidding(playerId) {
+    if (confirm('End bidding and sell this player to the highest bidder?')) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                action: 'end_bidding',
+                player_id: playerId
+            }));
+        }
+    }
+}
+
+function markUnsold(playerId) {
+    if (confirm('Mark this player as unsold?')) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                action: 'end_bidding',
+                player_id: playerId
+            }));
+        }
+    }
+}
+
+// Initialize WebSocket on page load
+initWebSocket();
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Press Enter to search
+    if (e.key === 'Enter' && document.activeElement.id === 'playerSearchInput') {
+        const firstResult = document.querySelector('#searchResults .player-card');
+        if (firstResult) {
+            selectPlayer(firstResult);
+            document.getElementById('startSelectedPlayer').click();
+        }
+    }
+});
+</script>
+{% endblock %}

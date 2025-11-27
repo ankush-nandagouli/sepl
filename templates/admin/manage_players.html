@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Players - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .player-card {
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+    
+    .player-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-5px);
+    }
+    
+    .player-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .player-avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+    }
+    
+    .badge-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+    
+    .tab-pane {
+        animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people"></i> Manage Players</h2>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+    
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pending" type="button">
+                <i class="bi bi-clock-history"></i> Pending Approval 
+                <span class="badge bg-warning text-dark">{{ pending_players.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#approved" type="button">
+                <i class="bi bi-check-circle"></i> Approved 
+                <span class="badge bg-success">{{ approved_players.count }}</span>
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content">
+        <!-- Pending Players Tab -->
+        <div class="tab-pane fade show active" id="pending" role="tabpanel">
+            {% if pending_players %}
+                <div class="row">
+                    {% for player in pending_players %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card player-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start mb-3">
+                                    {% if player.user.profile_picture %}
+                                        <img src="{{ player.user.profile_picture.url }}" alt="{{ player.user.get_full_name }}" class="player-avatar me-3">
+                                    {% else %}
+                                        <div class="player-avatar-placeholder me-3">
+                                            <i class="bi bi-person"></i>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title mb-1">{{ player.user.get_full_name }}</h5>
+                                        <p class="text-muted small mb-0">@{{ player.user.username }}</p>
+                                        <span class="badge bg-info mt-1">{{ player.get_category_display }}</span>
+                                    </div>
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="player-details small">
+                                    {% if player.user.player_type == 'student' %}
+                                        <p class="mb-1">
+                                            <i class="bi bi-person-badge"></i> <strong>Type:</strong> Student
+                                        </p>
+                                        {% if player.user.roll_number %}
+                                        <p class="mb-1">
+                                            <i class="bi bi-card-text"></i> <strong>Roll No:</strong> {{ player.user.roll_number }}
+                                        </p>
+                                        {% endif %}
+                                        <p class="mb-1">
+                                            <i class="bi bi-book"></i> <strong>Course:</strong> {{ player.user.get_course_display }}
+                                        </p>
+                                        {% if player.user.branch %}
+                                        <p class="mb-1">
+                                            <i class="bi bi-building"></i> <strong>Branch:</strong> {{ player.user.get_branch_display }}
+                                        </p>
+                                        {% endif %}
+                                        <p class="mb-1">
+                                            <i class="bi bi-calendar"></i> <strong>Year:</strong> {{ player.user.get_year_of_study_display }}
+                                        </p>
+                                    {% elif player.user.player_type == 'faculty' %}
+                                        <p class="mb-1">
+                                            <i class="bi bi-person-badge"></i> <strong>Type:</strong> Faculty
+                                        </p>
+                                        <p class="mb-1">
+                                            <i class="bi bi-building"></i> <strong>Department:</strong> {{ player.user.get_branch_display }}
+                                        </p>
+                                    {% endif %}
+                                    
+                                    {% if player.batting_style %}
+                                    <p class="mb-1">
+                                        <i class="bi bi-trophy"></i> <strong>Batting:</strong> {{ player.batting_style }}
+                                    </p>
+                                    {% endif %}
+                                    
+                                    {% if player.bowling_style %}
+                                    <p class="mb-1">
+                                        <i class="bi bi-circle"></i> <strong>Bowling:</strong> {{ player.bowling_style }}
+                                    </p>
+                                    {% endif %}
+                                    
+                                    <p class="mb-1">
+                                        <i class="bi bi-cash"></i> <strong>Base Price:</strong> ₹{{ player.base_price }}
+                                    </p>
+                                    
+                                    {% if player.previous_team %}
+                                    <p class="mb-1">
+                                        <i class="bi bi-clock-history"></i> <strong>Previous Team:</strong> {{ player.previous_team }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'approve_player' player.id %}" class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-circle"></i> Approve
+                                    </a>
+                                    <a href="{% url 'reject_player' player.id %}" class="btn btn-danger btn-sm" 
+                                       onclick="return confirm('Are you sure you want to reject this player?')">
+                                        <i class="bi bi-x-circle"></i> Reject
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No pending player registrations at the moment.
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Approved Players Tab -->
+        <div class="tab-pane fade" id="approved" role="tabpanel">
+            {% if approved_players %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Player</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Details</th>
+                                <th>Base Price</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for player in approved_players %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if player.user.profile_picture %}
+                                            <img src="{{ player.user.profile_picture.url }}" alt="{{ player.user.get_full_name }}" 
+                                                 class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="rounded-circle me-2 bg-primary text-white d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px; font-size: 1.2rem;">
+                                                <i class="bi bi-person"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ player.user.get_full_name }}</strong><br>
+                                            <small class="text-muted">@{{ player.user.username }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if player.user.player_type == 'student' %}
+                                        <span class="badge bg-primary">Student</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Faculty</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ player.get_category_display }}</span>
+                                </td>
+                                <td>
+                                    <small>
+                                        {% if player.user.player_type == 'student' %}
+                                            {% if player.user.roll_number %}<strong>Roll:</strong> {{ player.user.roll_number }}<br>{% endif %}
+                                            <strong>Course:</strong> {{ player.user.get_course_display }}<br>
+                                            {% if player.user.branch %}<strong>Branch:</strong> {{ player.user.get_branch_display }}<br>{% endif %}
+                                            <strong>Year:</strong> {{ player.user.get_year_of_study_display }}
+                                        {% else %}
+                                            <strong>Dept:</strong> {{ player.user.get_branch_display }}
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>
+                                    <strong>₹{{ player.base_price }}</strong>
+                                </td>
+                                <td>
+                                    {% if player.status == 'sold' %}
+                                        <span class="badge bg-success">Sold to {{ player.team.name }}</span>
+                                    {% elif player.status == 'unsold' %}
+                                        <span class="badge bg-warning text-dark">Unsold</span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ player.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No approved players yet.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

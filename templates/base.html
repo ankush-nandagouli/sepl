@@ -1,0 +1,393 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SEPL - Satpuda Engineering Premier League{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --accent-color: #f59e0b;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            background: rgba(30, 58, 138, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: var(--accent-color) !important;
+        }
+        .content-wrapper {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .btn-primary {
+            background: var(--secondary-color);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: var(--primary-color);
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Footer styles */
+        footer {
+            margin-top: auto;
+            background: rgba(15, 23, 42, 0.98);
+            color: #e5e7eb;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.25);
+        }
+        .footer-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #9ca3af;
+        }
+        .footer-link {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-size: 0.9rem;
+            text-decoration: none;
+            color: #e5e7eb;
+        }
+        .footer-link:hover {
+            color: var(--accent-color);
+        }
+        .footer-credit-trigger {
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 1px dashed rgba(249, 250, 251, 0.5);
+        }
+        .footer-credit-text {
+            font-size: 0.85rem;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- HEADER / NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+                <i class="bi bi-trophy-fill"></i>
+                <span>SEPL</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Left side: main navigation -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="bi bi-house-door"></i> Home
+                        </a>
+                    </li>
+
+                    {% if user.is_authenticated %}
+                        <!-- Common Dashboard link (redirects based on user_type) -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard' %}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+
+                        {% if user.user_type == 'player' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'player_dashboard' %}">
+                                    <i class="bi bi-person-badge"></i> Player Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'player_registration' %}">
+                                    <i class="bi bi-clipboard-check"></i> Player Registration
+                                </a>
+                            </li>
+
+                        {% elif user.user_type == 'admin' %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-shield-lock"></i> Admin Panel
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'admin_dashboard' %}">
+                                            <i class="bi bi-speedometer"></i> Admin Dashboard
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'manage_teams' %}">
+                                            <i class="bi bi-people"></i> Manage Teams
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'manage_players' %}">
+                                            <i class="bi bi-person-lines-fill"></i> Manage Players
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'manage_auction' %}">
+                                            <i class="bi bi-gavel"></i> Manage Auction Sessions
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'auction_control' %}">
+                                            <i class="bi bi-hammer"></i> Auction Control
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                        {% elif user.user_type == 'team_owner' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'owner_dashboard' %}">
+                                    <i class="bi bi-briefcase"></i> Owner Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'live_auction' %}">
+                                    <i class="bi bi-cash-stack"></i> Live Auction
+                                </a>
+                            </li>
+
+                        {% elif user.user_type == 'team_manager' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'manager_dashboard' %}">
+                                    <i class="bi bi-clipboard-data"></i> Manager Dashboard
+                                </a>
+                            </li>
+
+                        {% elif user.user_type == 'umpire' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'umpire_dashboard' %}">
+                                    <i class="bi bi-flag"></i> Umpire Dashboard
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <!-- Guest navigation -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'player_registration' %}">
+                                <i class="bi bi-clipboard-check"></i> Player Registration
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <!-- Right side: Auth controls -->
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i>
+                                <span>{{ user.get_full_name|default:user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <h6 class="dropdown-header text-muted text-uppercase">
+                                        Role: {{ user.user_type|default:"User" }}
+                                    </h6>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'dashboard' %}">
+                                        <i class="bi bi-speedometer2"></i> Go to Dashboard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'logout' %}">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">
+                                <i class="bi bi-person-plus"></i> Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="content-wrapper">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="py-4 mt-4">
+        <div class="container">
+            <div class="row gy-3">
+                <!-- Column 1: Tournament info -->
+                <div class="col-md-4">
+                    <div class="footer-title mb-2">Satpuda Engineering Premier League</div>
+                    <p class="mb-1" style="font-size: 0.9rem;">
+                        A professional, tech-driven intra-college cricket tournament management system.
+                    </p>
+                    <p class="mb-0" style="font-size: 0.85rem;">
+                        {% now "Y" %} &copy; SEPL. All rights reserved.
+                    </p>
+                </div>
+
+                <!-- Column 2: Quick links based on auth -->
+                <div class="col-md-4">
+                    <div class="footer-title mb-2">Quick Links</div>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="footer-link">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+
+                        {% if user.user_type == 'player' %}
+                            <a href="{% url 'player_dashboard' %}" class="footer-link">
+                                <i class="bi bi-person-badge"></i> Player Dashboard
+                            </a>
+                            <a href="{% url 'player_registration' %}" class="footer-link">
+                                <i class="bi bi-clipboard-check"></i> Player Registration
+                            </a>
+
+                        {% elif user.user_type == 'admin' %}
+                            <a href="{% url 'admin_dashboard' %}" class="footer-link">
+                                <i class="bi bi-speedometer"></i> Admin Dashboard
+                            </a>
+                            <a href="{% url 'manage_teams' %}" class="footer-link">
+                                <i class="bi bi-people"></i> Manage Teams
+                            </a>
+                            <a href="{% url 'manage_players' %}" class="footer-link">
+                                <i class="bi bi-person-lines-fill"></i> Manage Players
+                            </a>
+                            <a href="{% url 'manage_auction' %}" class="footer-link">
+                                <i class="bi bi-gavel"></i> Manage Auction Sessions
+                            </a>
+                            <a href="{% url 'auction_control' %}" class="footer-link">
+                                <i class="bi bi-hammer"></i> Auction Control
+                            </a>
+
+                        {% elif user.user_type == 'team_owner' %}
+                            <a href="{% url 'owner_dashboard' %}" class="footer-link">
+                                <i class="bi bi-briefcase"></i> Owner Dashboard
+                            </a>
+                            <a href="{% url 'live_auction' %}" class="footer-link">
+                                <i class="bi bi-cash-stack"></i> Live Auction
+                            </a>
+
+                        {% elif user.user_type == 'team_manager' %}
+                            <a href="{% url 'manager_dashboard' %}" class="footer-link">
+                                <i class="bi bi-clipboard-data"></i> Manager Dashboard
+                            </a>
+
+                        {% elif user.user_type == 'umpire' %}
+                            <a href="{% url 'umpire_dashboard' %}" class="footer-link">
+                                <i class="bi bi-flag"></i> Umpire Dashboard
+                            </a>
+                        {% endif %}
+
+                        <a href="{% url 'logout' %}" class="footer-link">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    {% else %}
+                        <a href="{% url 'home' %}" class="footer-link">
+                            <i class="bi bi-house-door"></i> Home
+                        </a>
+                        <a href="{% url 'player_registration' %}" class="footer-link">
+                            <i class="bi bi-clipboard-check"></i> Player Registration
+                        </a>
+                        <a href="{% url 'login' %}" class="footer-link">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                        <a href="{% url 'register' %}" class="footer-link">
+                            <i class="bi bi-person-plus"></i> Register
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Column 3: Credit with hover/tap reveal -->
+                <div class="col-md-4 text-md-end">
+                    <div class="footer-title mb-2">Developer</div>
+                    <p class="mb-2 footer-credit-text">
+                        <span id="dev-credit" class="footer-credit-trigger text-warning">
+                            --
+                        </span>
+                        <span id="dev-credit-text" class="ms-2 d-none footer-credit-text text-warning">
+                            Developed &amp; Designed by <strong>Ankush Nandagouli</strong>
+                        </span>
+                    </p>
+                    <p class="mb-0" style="font-size: 0.8rem; color: #9ca3af;">
+                        Built with Django, Channels, Redis &amp; Bootstrap.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Footer hover/tap reveal for credit text
+        document.addEventListener('DOMContentLoaded', function () {
+            const trigger = document.getElementById('dev-credit');
+            const text = document.getElementById('dev-credit-text');
+
+            if (trigger && text) {
+                // Hover (desktop)
+                trigger.addEventListener('mouseenter', function () {
+                    text.classList.remove('d-none');
+                });
+                trigger.addEventListener('mouseleave', function () {
+                    text.classList.add('d-none');
+                });
+
+                // Tap / click (mobile + desktop)
+                trigger.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    text.classList.toggle('d-none');
+                });
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
