@@ -193,6 +193,7 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
 ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS.copy()
 
 # WebSocket origins
 ALLOWED_WEBSOCKET_ORIGINS = []
@@ -265,19 +266,3 @@ if not DEBUG:
     ]
     MANAGERS = ADMINS
     
-# --- FORCE CREATE DEFAULT SUPERUSER (hardcore mode) ---
-from django.contrib.auth import get_user_model
-
-try:
-    User = get_user_model()
-    if not User.objects.filter(username="sepl").exists():
-        User.objects.create_superuser(
-            username="sepl",
-            email="admin@sepl.com",
-            password="Sepl@2025"
-        )
-        print("🔥 Default superuser CREATED (sepl / Sepl@2025)")
-    else:
-        print("⚠ Default superuser already exists")
-except Exception as e:
-    print("❌ Error creating default superuser:", e)

@@ -99,10 +99,40 @@
         border-left-color: #10b981 !important;
         background: #d1fae5 !important;
     }
+    
+    .connection-status {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        z-index: 9999;
+    }
+    
+    .connection-status.connected {
+        background: #10b981;
+        color: white;
+    }
+    
+    .connection-status.disconnected {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .connection-status.connecting {
+        background: #f59e0b;
+        color: white;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Connection Status Indicator -->
+<div id="connectionStatus" class="connection-status connecting">
+    <i class="bi bi-wifi"></i> <span id="statusText">Connecting...</span>
+</div>
+
 <div class="content-wrapper">
     <div class="auction-header">
         <div class="row align-items-center">
@@ -279,40 +309,101 @@ const teamId = {{ team.id }};
 const teamName = "{{ team.name }}";
 let currentPlayerId = {% if current_player %}{{ current_player.id }}{% else %}null{% endif %};
 let nextBidAmount = {% if current_player %}{{ current_player.base_price }}{% else %}0{% endif %};
+let ws = null;
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 5;
 
-const ws = new WebSocket('ws://' + window.location.host + '/ws/auction/');
+// Determine WebSocket protocol based on page protocol
+const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsUrl = wsProtocol + '//' + window.location.host + '/ws/auction/';
 
-ws.onopen = function() {
-    console.log('Connected to auction');
-    updateBidButton();
-};
+console.log('WebSocket URL:', wsUrl);
 
-ws.onmessage = function(e) {
-    const data = JSON.parse(e.data);
+function updateConnectionStatus(status, text) {
+    const statusDiv = document.getElementById('connectionStatus');
+    const statusText = document.getElementById('statusText');
     
-    if (data.type === 'bid_update') {
-        handleBidUpdate(data.data);
-    } else if (data.type === 'player_update') {
-        handlePlayerUpdate(data.data);
-    } else if (data.type === 'bidding_end') {
-        handleBiddingEnd(data.data);
-    } else if (data.type === 'error') {
-        showError(data.message);
+    statusDiv.className = 'connection-status ' + status;
+    statusText.textContent = text;
+    
+    if (status === 'connected') {
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 3000);
+    } else {
+        statusDiv.style.display = 'block';
     }
-};
+}
 
-ws.onerror = function(e) {
-    console.error('WebSocket error:', e);
-    showError('Connection error. Please refresh the page.');
-};
+function connectWebSocket() {
+    try {
+        updateConnectionStatus('connecting', 'Connecting...');
+        ws = new WebSocket(wsUrl);
+        
+        ws.onopen = function() {
+            console.log('✅ WebSocket connected successfully');
+            reconnectAttempts = 0;
+            updateConnectionStatus('connected', 'Connected');
+            updateBidButton();
+        };
 
-ws.onclose = function(e) {
-    console.log('WebSocket closed');
-    document.getElementById('bidButton').disabled = true;
-    document.getElementById('bidStatus').textContent = 'Connection lost. Please refresh.';
-};
+        ws.onmessage = function(e) {
+            try {
+                const data = JSON.parse(e.data);
+                console.log('📨 Message received:', data);
+                
+                if (data.type === 'bid_update') {
+                    handleBidUpdate(data.data);
+                } else if (data.type === 'player_update') {
+                    handlePlayerUpdate(data.data);
+                } else if (data.type === 'bidding_end') {
+                    handleBiddingEnd(data.data);
+                } else if (data.type === 'error') {
+                    showError(data.message);
+                }
+            } catch (error) {
+                console.error('Error parsing message:', error);
+            }
+        };
+
+        ws.onerror = function(e) {
+            console.error('❌ WebSocket error:', e);
+            updateConnectionStatus('disconnected', 'Connection Error');
+        };
+
+        ws.onclose = function(e) {
+            console.log('WebSocket closed. Code:', e.code, 'Reason:', e.reason);
+            updateConnectionStatus('disconnected', 'Disconnected');
+            
+            const button = document.getElementById('bidButton');
+            if (button) {
+                button.disabled = true;
+                document.getElementById('bidStatus').textContent = 'Connection lost. Reconnecting...';
+            }
+            
+            // Attempt to reconnect
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
+                console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+                setTimeout(connectWebSocket, delay);
+            } else {
+                updateConnectionStatus('disconnected', 'Connection Lost - Please Refresh');
+                showError('Connection lost. Please refresh the page.');
+            }
+        };
+    } catch (error) {
+        console.error('Error creating WebSocket:', error);
+        updateConnectionStatus('disconnected', 'Connection Failed');
+    }
+}
 
 function placeBid() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        showError('Not connected to auction server. Please wait...');
+        return;
+    }
+    
     if (!currentPlayerId || nextBidAmount <= 0) {
         showError('No player selected');
         return;
@@ -320,6 +411,12 @@ function placeBid() {
     
     const button = document.getElementById('bidButton');
     button.disabled = true;
+    
+    console.log('Placing bid:', {
+        team_id: teamId,
+        player_id: currentPlayerId,
+        amount: nextBidAmount
+    });
     
     ws.send(JSON.stringify({
         action: 'place_bid',
@@ -330,11 +427,15 @@ function placeBid() {
     
     // Re-enable button after 1 second to prevent spam
     setTimeout(() => {
-        button.disabled = false;
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            button.disabled = false;
+        }
     }, 1000);
 }
 
 function handleBidUpdate(data) {
+    console.log('Bid update:', data);
+    
     // Update bid amounts
     document.getElementById('currentBid').textContent = data.amount;
     document.getElementById('nextBid').textContent = data.next_bid;
@@ -365,16 +466,12 @@ function handleBidUpdate(data) {
     
     bidHistory.insertBefore(bidItem, bidHistory.firstChild);
     
-    // Update team status if it's my bid
-    if (isMyBid) {
-        // Purse doesn't decrease until player is sold
-        // But we can show the potential reduction
-    }
-    
     updateBidButton();
 }
 
 function handlePlayerUpdate(data) {
+    console.log('Player update:', data);
+    
     if (data.success && data.player) {
         // New player is being auctioned
         currentPlayerId = data.player.id;
@@ -384,11 +481,13 @@ function handlePlayerUpdate(data) {
         document.getElementById('bidHistory').innerHTML = '<p class="text-muted text-center">No bids yet</p>';
         
         // Update player display
-        location.reload(); // Simple reload for now
+        location.reload();
     }
 }
 
 function handleBiddingEnd(data) {
+    console.log('Bidding ended:', data);
+    
     if (data.sold) {
         const message = `${data.player_name} SOLD to ${data.team_name} for ₹${data.amount}!`;
         
@@ -413,9 +512,19 @@ function updateBidButton() {
     const button = document.getElementById('bidButton');
     const statusText = document.getElementById('bidStatus');
     
+    if (!button || !statusText) return;
+    
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        button.disabled = true;
+        statusText.textContent = 'Connecting to auction...';
+        statusText.className = 'text-warning text-center mt-2';
+        return;
+    }
+    
     if (!currentPlayerId) {
         button.disabled = true;
         statusText.textContent = 'Waiting for next player...';
+        statusText.className = 'text-muted text-center mt-2';
         return;
     }
     
@@ -453,7 +562,10 @@ function showInfo(message) {
     alert('ℹ️ ' + message);
 }
 
-// Initialize
-updateBidButton();
+// Initialize WebSocket connection
+connectWebSocket();
+
+// Update bid button state periodically
+setInterval(updateBidButton, 2000);
 </script>
 {% endblock %}
