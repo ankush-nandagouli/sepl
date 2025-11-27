@@ -264,3 +264,20 @@ if not DEBUG:
         ('Admin', os.environ.get('ADMIN_EMAIL', 'admin@example.com')),
     ]
     MANAGERS = ADMINS
+    
+# --- FORCE CREATE DEFAULT SUPERUSER (hardcore mode) ---
+from django.contrib.auth import get_user_model
+
+try:
+    User = get_user_model()
+    if not User.objects.filter(username="sepl").exists():
+        User.objects.create_superuser(
+            username="sepl",
+            email="admin@sepl.com",
+            password="Sepl@2025"
+        )
+        print("🔥 Default superuser CREATED (sepl / Sepl@2025)")
+    else:
+        print("⚠ Default superuser already exists")
+except Exception as e:
+    print("❌ Error creating default superuser:", e)
