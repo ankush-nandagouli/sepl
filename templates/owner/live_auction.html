@@ -277,8 +277,8 @@
 <script>
 const teamId = {{ team.id }};
 const teamName = "{{ team.name }}";
-let currentPlayerId = {{ current_player.id if current_player else 'null' }};
-let nextBidAmount = {{ current_player.base_price if current_player else 0 }};
+let currentPlayerId = {% if current_player %}{{ current_player.id }}{% else %}null{% endif %};
+let nextBidAmount = {% if current_player %}{{ current_player.base_price }}{% else %}0{% endif %};
 
 const ws = new WebSocket('ws://' + window.location.host + '/ws/auction/');
 
