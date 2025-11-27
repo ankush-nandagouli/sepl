@@ -10,7 +10,8 @@ urlpatterns = [
     
     # Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
-    
+    #edit profile
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
     # Player URLs
     path('player/register/', views.player_registration, name='player_registration'),
     path('player/dashboard/', views.player_dashboard, name='player_dashboard'),

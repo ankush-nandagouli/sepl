@@ -458,3 +458,76 @@ def manager_dashboard(request):
 def umpire_dashboard(request):
     """Umpire dashboard"""
     return render(request, 'umpire/dashboard.html')
+
+
+# Add these views to auction/views.py
+
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from .forms import UserProfileEditForm, PlayerProfileEditForm, PlayerDetailsEditForm
+
+@login_required
+def edit_profile(request):
+    """Edit user profile - adapts form based on user type"""
+    user = request.user
+    
+    # Determine which form to use
+    if user.user_type == 'player':
+        ProfileForm = PlayerProfileEditForm
+    else:
+        ProfileForm = UserProfileEditForm
+    
+    # Check if user has player profile
+    try:
+        player_profile = user.player_profile
+        has_player_profile = True
+    except Player.DoesNotExist:
+        player_profile = None
+        has_player_profile = False
+    
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+        
+        if form_type == 'profile':
+            profile_form = ProfileForm(request.POST, request.FILES, instance=user)
+            
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, 'Profile updated successfully!')
+                return redirect('edit_profile')
+            else:
+                messages.error(request, 'Please correct the errors below.')
+        
+        elif form_type == 'player_details' and has_player_profile:
+            player_form = PlayerDetailsEditForm(request.POST, instance=player_profile)
+            
+            if player_form.is_valid():
+                player_form.save()
+                messages.success(request, 'Cricket details updated successfully!')
+                return redirect('edit_profile')
+            else:
+                messages.error(request, 'Please correct the errors below.')
+        
+        elif form_type == 'password':
+            password_form = PasswordChangeForm(user, request.POST)
+            
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)  # Keep user logged in
+                messages.success(request, 'Password changed successfully!')
+                return redirect('edit_profile')
+            else:
+                messages.error(request, 'Please correct the errors below.')
+    
+    # Initialize forms for GET request
+    profile_form = ProfileForm(instance=user)
+    password_form = PasswordChangeForm(user)
+    player_form = PlayerDetailsEditForm(instance=player_profile) if has_player_profile else None
+    
+    context = {
+        'profile_form': profile_form,
+        'password_form': password_form,
+        'player_form': player_form,
+        'has_player_profile': has_player_profile,
+    }
+    return render(request, 'profile/edit_profile.html', context)

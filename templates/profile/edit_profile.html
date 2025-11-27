@@ -1,0 +1,388 @@
+<!-- templates/profile/edit_profile.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile - SEPL{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .profile-picture-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        margin: 0 auto 20px;
+    }
+    
+    .profile-picture-placeholder {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 4rem;
+        border: 5px solid white;
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+        color: var(--primary-color);
+        font-weight: bold;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid var(--secondary-color);
+    }
+    
+    .user-badge {
+        background: var(--accent-color);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        display: inline-block;
+        margin-top: 10px;
+        font-weight: 600;
+    }
+    
+    .form-section {
+        margin-bottom: 25px;
+    }
+    
+    .image-upload-preview {
+        margin-top: 15px;
+        display: none;
+    }
+    
+    .image-upload-preview img {
+        max-width: 200px;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Profile Header -->
+<div class="profile-header">
+    {% if user.profile_picture %}
+        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="profile-picture-preview">
+    {% else %}
+        <div class="profile-picture-placeholder">
+            <i class="bi bi-person-circle"></i>
+        </div>
+    {% endif %}
+    
+    <h2>{{ user.get_full_name }}</h2>
+    <p class="mb-0">@{{ user.username }}</p>
+    <span class="user-badge">{{ user.get_user_type_display }}</span>
+</div>
+
+<div class="row">
+    <!-- Left Column - Profile Information -->
+    <div class="col-lg-6">
+        <!-- Basic Information -->
+        <div class="section-card">
+            <h3 class="section-title">
+                <i class="bi bi-person-fill"></i> Basic Information
+            </h3>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="profile">
+                
+                <div class="row">
+                    <div class="col-md-6 form-section">
+                        <label class="form-label">First Name *</label>
+                        {{ profile_form.first_name }}
+                        {% if profile_form.first_name.errors %}
+                            <div class="text-danger small">{{ profile_form.first_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 form-section">
+                        <label class="form-label">Last Name *</label>
+                        {{ profile_form.last_name }}
+                        {% if profile_form.last_name.errors %}
+                            <div class="text-danger small">{{ profile_form.last_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">Email *</label>
+                    {{ profile_form.email }}
+                    {% if profile_form.email.errors %}
+                        <div class="text-danger small">{{ profile_form.email.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 form-section">
+                        <label class="form-label">Phone</label>
+                        {{ profile_form.phone }}
+                        {% if profile_form.phone.errors %}
+                            <div class="text-danger small">{{ profile_form.phone.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 form-section">
+                        <label class="form-label">College</label>
+                        {{ profile_form.college }}
+                        {% if profile_form.college.errors %}
+                            <div class="text-danger small">{{ profile_form.college.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">Profile Picture</label>
+                    {{ profile_form.profile_picture }}
+                    <div class="image-upload-preview" id="profilePicPreview">
+                        <img id="profilePicImg" src="" alt="Preview">
+                    </div>
+                    {% if profile_form.profile_picture.errors %}
+                        <div class="text-danger small">{{ profile_form.profile_picture.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- Player-specific fields -->
+                {% if user.user_type == 'player' %}
+                <hr class="my-4">
+                <h5 class="text-muted mb-3">Player Information</h5>
+                
+                <div class="row">
+                    <div class="col-md-6 form-section">
+                        <label class="form-label">Player Type</label>
+                        {{ profile_form.player_type }}
+                    </div>
+                    
+                    <div class="col-md-6 form-section">
+                        <label class="form-label">Roll Number</label>
+                        {{ profile_form.roll_number }}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 form-section">
+                        <label class="form-label">Course</label>
+                        {{ profile_form.course }}
+                    </div>
+                    
+                    <div class="col-md-6 form-section">
+                        <label class="form-label">Branch</label>
+                        {{ profile_form.branch }}
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">Year of Study</label>
+                    {{ profile_form.year_of_study }}
+                </div>
+                {% endif %}
+                
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="bi bi-save"></i> Save Profile Changes
+                </button>
+            </form>
+        </div>
+        
+        <!-- Cricket Details (Only for players with player profile) -->
+        {% if has_player_profile %}
+        <div class="section-card">
+            <h3 class="section-title">
+                <i class="bi bi-trophy-fill"></i> Cricket Details
+            </h3>
+            
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="player_details">
+                
+                <div class="form-section">
+                    <label class="form-label">Player Category *</label>
+                    {{ player_form.category }}
+                    {% if player_form.category.errors %}
+                        <div class="text-danger small">{{ player_form.category.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">Batting Style</label>
+                    {{ player_form.batting_style }}
+                    {% if player_form.batting_style.errors %}
+                        <div class="text-danger small">{{ player_form.batting_style.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">Bowling Style</label>
+                    {{ player_form.bowling_style }}
+                    {% if player_form.bowling_style.errors %}
+                        <div class="text-danger small">{{ player_form.bowling_style.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">Previous Team</label>
+                    {{ player_form.previous_team }}
+                    {% if player_form.previous_team.errors %}
+                        <div class="text-danger small">{{ player_form.previous_team.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn btn-success btn-lg w-100">
+                    <i class="bi bi-save"></i> Update Cricket Details
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Right Column - Security -->
+    <div class="col-lg-6">
+        <!-- Change Password -->
+        <div class="section-card">
+            <h3 class="section-title">
+                <i class="bi bi-shield-lock-fill"></i> Change Password
+            </h3>
+            
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="password">
+                
+                <div class="form-section">
+                    <label class="form-label">Current Password *</label>
+                    {{ password_form.old_password }}
+                    {% if password_form.old_password.errors %}
+                        <div class="text-danger small">{{ password_form.old_password.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">New Password *</label>
+                    {{ password_form.new_password1 }}
+                    {% if password_form.new_password1.errors %}
+                        <div class="text-danger small">{{ password_form.new_password1.errors }}</div>
+                    {% endif %}
+                    <small class="text-muted d-block mt-1">
+                        Your password must contain at least 8 characters.
+                    </small>
+                </div>
+                
+                <div class="form-section">
+                    <label class="form-label">Confirm New Password *</label>
+                    {{ password_form.new_password2 }}
+                    {% if password_form.new_password2.errors %}
+                        <div class="text-danger small">{{ password_form.new_password2.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn btn-warning btn-lg w-100">
+                    <i class="bi bi-key-fill"></i> Change Password
+                </button>
+            </form>
+        </div>
+        
+        <!-- Account Information -->
+        <div class="section-card">
+            <h3 class="section-title">
+                <i class="bi bi-info-circle-fill"></i> Account Information
+            </h3>
+            
+            <div class="mb-3">
+                <strong>Username:</strong>
+                <p class="mb-0">{{ user.username }}</p>
+            </div>
+            
+            <div class="mb-3">
+                <strong>User Type:</strong>
+                <p class="mb-0">{{ user.get_user_type_display }}</p>
+            </div>
+            
+            <div class="mb-3">
+                <strong>Account Status:</strong>
+                <p class="mb-0">
+                    {% if user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inactive</span>
+                    {% endif %}
+                </p>
+            </div>
+            
+            {% if has_player_profile %}
+            <div class="mb-3">
+                <strong>Player Status:</strong>
+                <p class="mb-0">
+                    {% if user.player_profile.status == 'approved' %}
+                        <span class="badge bg-success">Approved</span>
+                    {% elif user.player_profile.status == 'pending' %}
+                        <span class="badge bg-warning">Pending Approval</span>
+                    {% elif user.player_profile.status == 'sold' %}
+                        <span class="badge bg-info">Sold to {{ user.player_profile.team.name }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ user.player_profile.get_status_display }}</span>
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+            
+            <hr>
+            
+            <div class="text-center">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Profile picture preview
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.querySelector('input[type="file"][name="profile_picture"]');
+        const preview = document.getElementById('profilePicPreview');
+        const previewImg = document.getElementById('profilePicImg');
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
