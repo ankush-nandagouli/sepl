@@ -7,7 +7,9 @@ from django.db.models import Sum, Count, Q
 from django.http import JsonResponse
 from django.utils import timezone
 from .models import User, Team, Player, AuctionSession, Bid, AuctionLog, TournamentBanner, TournamentContent, TournamentStats, SocialMediaLink
-from .forms import UserRegistrationForm, PlayerRegistrationForm, TeamCreationForm, AuctionSessionForm
+from .forms import UserRegistrationForm, PlayerRegistrationForm, TeamCreationForm, AuctionSessionForm, UserProfileEditForm, PlayerProfileEditForm, PlayerDetailsEditForm
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 
 def is_admin(user):
     return user.user_type == 'admin'
@@ -68,6 +70,7 @@ def home(request):
         'recent_sales': recent_sales,
     }
     return render(request, 'home.html', context)
+
 def register(request):
     """User registration with proper validation and debugging"""
     if request.user.is_authenticated:
@@ -460,11 +463,8 @@ def umpire_dashboard(request):
     return render(request, 'umpire/dashboard.html')
 
 
-# Add these views to auction/views.py
 
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
-from .forms import UserProfileEditForm, PlayerProfileEditForm, PlayerDetailsEditForm
+
 
 @login_required
 def edit_profile(request):

@@ -1,0 +1,2 @@
+INFO 2025-11-27 19:12:44,746 autoreload Watching for file changes with StatReloader
+INFO 2025-11-27 19:13:00,190 runserver [32mHTTP GET / 301 [0.01, 127.0.0.1:53102][0m

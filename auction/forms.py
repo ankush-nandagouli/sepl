@@ -2,6 +2,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from .models import Player, Team, AuctionSession
+from django.contrib.auth.forms import PasswordChangeForm
 
 User = get_user_model()
 
@@ -169,7 +170,6 @@ class AuctionSessionForm(forms.ModelForm):
 
 # Add these forms to auction/forms.py
 
-from django.contrib.auth.forms import PasswordChangeForm
 
 class UserProfileEditForm(forms.ModelForm):
     """Base profile edit form for all users"""

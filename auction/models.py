@@ -5,7 +5,6 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from cloudinary.models import CloudinaryField
 class User(AbstractUser):
     USER_TYPES = (
-        ('admin', 'Admin'),
         ('player', 'Player'),
         ('team_owner', 'Team Owner'),
         ('team_manager', 'Team Manager'),
