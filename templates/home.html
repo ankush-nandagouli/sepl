@@ -12,7 +12,6 @@
         border-radius: 15px;
         margin-bottom: 40px;
     }
-    
     .hero-slide {
         position: relative;
         height: 600px;
@@ -22,36 +21,29 @@
         align-items: center;
         justify-content: center;
     }
-    
     .hero-overlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        inset: 0;
         background: linear-gradient(135deg, rgba(30,58,138,0.85) 0%, rgba(59,130,246,0.85) 100%);
     }
-    
     .hero-content {
         position: relative;
         z-index: 2;
         color: white;
         text-align: center;
         padding: 40px;
+        max-width: 900px;
     }
-    
     .hero-content h1 {
         font-size: 3.5rem;
         font-weight: bold;
         margin-bottom: 20px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
-    
     .hero-content p {
         font-size: 1.5rem;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
     }
-    
+
     /* Stats Section */
     .stats-section {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -60,200 +52,130 @@
         border-radius: 15px;
         color: white;
     }
-    
     .stat-card {
         text-align: center;
-        padding: 30px;
+        padding: 25px;
+        border-radius: 12px;
         transition: transform 0.3s;
     }
-    
     .stat-card:hover {
         transform: translateY(-10px);
     }
-    
     .stat-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        opacity: 0.9;
+        font-size: 3.5rem;
     }
-    
     .stat-value {
-        font-size: 3rem;
+        font-size: 2.5rem;
         font-weight: bold;
-        margin-bottom: 10px;
     }
-    
-    .stat-label {
-        font-size: 1.2rem;
-        opacity: 0.95;
-    }
-    
-    /* Recent Sales Ticker */
+
+    /* Ticker */
     .sales-ticker {
         background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         padding: 20px;
-        border-radius: 10px;
-        margin: 30px 0;
+        border-radius: 12px;
         color: white;
     }
-    
     .ticker-item {
         display: flex;
         align-items: center;
-        padding: 15px;
-        background: rgba(255,255,255,0.1);
+        padding: 12px;
+        background: rgba(255,255,255,0.15);
         border-radius: 8px;
-        margin-bottom: 10px;
-        transition: all 0.3s;
+        margin-bottom: 8px;
     }
-    
-    .ticker-item:hover {
-        background: rgba(255,255,255,0.2);
-        transform: translateX(5px);
-    }
-    
-    .ticker-item:last-child {
-        margin-bottom: 0;
-    }
-    
-    /* Content Sections */
+
+    /* Content Section */
     .content-section {
         background: white;
-        padding: 60px 40px;
-        margin: 40px 0;
+        padding: 50px 30px;
         border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin: 40px 0;
+        box-shadow: 0px 8px 30px rgba(0,0,0,0.15);
     }
-    
-    .content-section h2 {
-        color: var(--primary-color);
-        margin-bottom: 30px;
-        font-weight: bold;
-    }
-    
-    .content-section img {
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-    
-    /* Teams Grid */
+
+    /* Teams */
     .team-card {
-        transition: all 0.3s;
-        cursor: pointer;
+        transition: transform .2s, box-shadow .2s;
     }
-    
     .team-card:hover {
         transform: scale(1.05);
         box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
-    
     .team-logo-container {
         height: 120px;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-        border-radius: 10px;
-        margin-bottom: 15px;
+        border-radius: 12px;
+        background: #e5e7eb;
+        margin-bottom: 10px;
     }
-    
-    /* How It Works */
+
+    /* How it works */
     .how-it-works {
         background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        padding: 60px 40px;
+        padding: 60px 30px;
         border-radius: 15px;
         color: white;
-        margin: 40px 0;
+        margin-top: 50px;
     }
-    
     .step-card {
         text-align: center;
-        padding: 30px 20px;
+        padding: 20px 10px;
     }
-    
-    .step-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        opacity: 0.95;
-    }
-    
-    /* Live Auction Alert */
-    .live-auction-alert {
-        animation: pulse 2s infinite;
-        font-size: 1.3rem;
-        padding: 20px 40px;
-        border-radius: 10px;
-        display: inline-block;
-        margin: 20px 0;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-    }
-    
+
     /* Responsive */
-    @media (max-width: 768px) {
-        .hero-carousel { height: 400px; }
-        .hero-slide { height: 400px; }
-        .hero-content h1 { font-size: 2rem; }
+    @media(max-width: 768px) {
+        .hero-carousel, .hero-slide { height: 350px; }
+        .hero-content h1 { font-size: 1.9rem; }
         .hero-content p { font-size: 1.1rem; }
-        .stat-value { font-size: 2rem; }
+        .stat-card { padding: 15px; }
+        .stat-value { font-size: 1.8rem; }
+        .sales-ticker { padding: 15px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- Hero Carousel -->
+<!-- HERO CAROUSEL -->
 {% if hero_banners %}
 <div id="heroCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel">
     <div class="carousel-indicators">
         {% for banner in hero_banners %}
-        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}" 
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
                 class="{% if forloop.first %}active{% endif %}"></button>
         {% endfor %}
     </div>
-    
+
     <div class="carousel-inner">
         {% for banner in hero_banners %}
         <div class="carousel-item {% if forloop.first %}active{% endif %}">
-            <div class="hero-slide" style="background-image: url('{{ banner.image.url }}');">
+            <div class="hero-slide" style="background-image:url('{{ banner.image.url }}')">
                 <div class="hero-overlay"></div>
                 <div class="hero-content">
-                    <h1>
-                        <i class="bi bi-trophy-fill" style="color: #f59e0b;"></i>
-                        {{ banner.heading|default:"SATPUDA ENGINEERING PREMIER LEAGUE" }}
-                    </h1>
-                    <p>{{ banner.subheading|default:"The Ultimate College Cricket Tournament" }}</p>
-                    {% if banner.description %}
-                    <p class="lead">{{ banner.description }}</p>
-                    {% endif %}
-                    
+                    <h1><i class="bi bi-trophy-fill text-warning"></i> {{ banner.heading|default:"SATPUDA ENGINEERING PREMIER LEAGUE" }}</h1>
+                    <p>{{ banner.subheading|default:"The Ultimate Cricket Experience" }}</p>
+
                     {% if active_session %}
-                    <div class="live-auction-alert alert alert-warning">
-                        <i class="bi bi-broadcast-pin"></i> <strong>LIVE AUCTION IN PROGRESS!</strong>
+                    <div class="alert alert-warning live-auction-alert mt-3 fw-bold">
+                        <i class="bi bi-broadcast-pin"></i> LIVE AUCTION IN PROGRESS
                     </div>
                     {% endif %}
-                    
+
                     <div class="mt-4">
                         {% if not user.is_authenticated %}
-                            {% if banner.button_text and banner.button_link %}
-                                <a href="{{ banner.button_link }}" class="btn btn-warning btn-lg me-3 px-5 py-3">
-                                    {{ banner.button_text }}
-                                </a>
-                            {% else %}
-                                <a href="{% url 'register' %}" class="btn btn-warning btn-lg me-3 px-5 py-3">
-                                    <i class="bi bi-person-plus"></i> Register Now
-                                </a>
-                                <a href="{% url 'login' %}" class="btn btn-light btn-lg px-5 py-3">
-                                    <i class="bi bi-box-arrow-in-right"></i> Login
-                                </a>
-                            {% endif %}
+                        <a href="{% url 'register' %}" class="btn btn-warning btn-lg me-2 px-4 py-2">
+                            <i class="bi bi-person-plus"></i> Register
+                        </a>
+                        <a href="{% url 'login' %}" class="btn btn-light btn-lg px-4 py-2">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
                         {% else %}
-                            <a href="{% url 'dashboard' %}" class="btn btn-warning btn-lg px-5 py-3">
-                                <i class="bi bi-speedometer2"></i> Go to Dashboard
-                            </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-warning btn-lg px-4 py-2">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
                         {% endif %}
                     </div>
                 </div>
@@ -261,174 +183,78 @@
         </div>
         {% endfor %}
     </div>
-    
-    {% if hero_banners.count > 1 %}
-    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-    </button>
-    {% endif %}
-</div>
-{% else %}
-<!-- Fallback if no banners -->
-<div class="hero-slide" style="background: linear-gradient(135deg, rgba(30,58,138,0.95) 0%, rgba(59,130,246,0.95) 100%);">
-    <div class="hero-content">
-        <h1>
-            <i class="bi bi-trophy-fill" style="color: #f59e0b;"></i>
-            SATPUDA ENGINEERING PREMIER LEAGUE
-        </h1>
-        <p>The Ultimate College Cricket Tournament</p>
-        <p class="lead">Experience the thrill of live player auctions and competitive cricket!</p>
-        
-        {% if active_session %}
-        <div class="live-auction-alert alert alert-warning">
-            <i class="bi bi-broadcast-pin"></i> <strong>LIVE AUCTION IN PROGRESS!</strong>
-        </div>
-        {% endif %}
-        
-        <div class="mt-4">
-            {% if not user.is_authenticated %}
-                <a href="{% url 'register' %}" class="btn btn-warning btn-lg me-3 px-5 py-3">
-                    <i class="bi bi-person-plus"></i> Register Now
-                </a>
-                <a href="{% url 'login' %}" class="btn btn-light btn-lg px-5 py-3">
-                    <i class="bi bi-box-arrow-in-right"></i> Login
-                </a>
-            {% else %}
-                <a href="{% url 'dashboard' %}" class="btn btn-warning btn-lg px-5 py-3">
-                    <i class="bi bi-speedometer2"></i> Go to Dashboard
-                </a>
-            {% endif %}
-        </div>
-    </div>
 </div>
 {% endif %}
 
-<!-- Tournament Stats -->
-<div class="stats-section">
-    <div class="container">
-        <h2 class="text-center mb-5 text-white">Tournament Overview</h2>
-        <div class="row">
-            {% if tournament_stats %}
-                {% for stat in tournament_stats %}
-                <div class="col-md-3 col-6 mb-4">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="{{ stat.icon|default:'bi bi-star-fill' }}"></i>
-                        </div>
-                        <div class="stat-value">{{ stat.value }}</div>
-                        <div class="stat-label">{{ stat.label }}</div>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <!-- Default stats -->
-                <div class="col-md-3 col-6 mb-4">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
-                        <div class="stat-value">{{ teams.count }}</div>
-                        <div class="stat-label">Teams Registered</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6 mb-4">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="bi bi-person-badge-fill"></i></div>
-                        <div class="stat-value">{{ total_players }}</div>
-                        <div class="stat-label">Players Registered</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6 mb-4">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
-                        <div class="stat-value">₹10,000</div>
-                        <div class="stat-label">Purse Per Team</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6 mb-4">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="bi bi-trophy-fill"></i></div>
-                        <div class="stat-value">LIVE</div>
-                        <div class="stat-label">Auction Status</div>
-                    </div>
-                </div>
-            {% endif %}
+<!-- STATS -->
+<div class="stats-section container text-center">
+    <h2 class="mb-5 text-white fw-bold"><i class="bi bi-bar-chart"></i> Tournament Overview</h2>
+    <div class="row g-3">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+                <div class="stat-value">{{ teams.count }}</div>
+                <div class="stat-label">Teams</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-person-badge-fill"></i></div>
+                <div class="stat-value">{{ total_players }}</div>
+                <div class="stat-label">Players</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+                <div class="stat-value">₹10,000</div>
+                <div class="stat-label">Base Purse</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-trophy-fill"></i></div>
+                <div class="stat-value">{{ active_session|yesno:"LIVE,OFF" }}</div>
+                <div class="stat-label">Auction</div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Recent Auction Highlights -->
+<!-- RECENT SALES -->
 {% if recent_sales %}
 <div class="container">
     <div class="sales-ticker">
-        <h3 class="mb-4"><i class="bi bi-fire"></i> Recent Player Sales</h3>
+        <h3 class="fw-bold"><i class="bi bi-fire"></i> Recent Sales</h3>
         {% for log in recent_sales %}
         <div class="ticker-item">
-            <div class="flex-grow-1">
-                <strong>{{ log.player.user.get_full_name }}</strong>
-                <span class="ms-2">→</span>
-                <span class="ms-2"><i class="bi bi-shield-fill"></i> {{ log.winning_team.name }}</span>
-            </div>
-            <div class="ms-auto">
-                <span class="badge bg-light text-dark fs-6">₹{{ log.final_amount }}</span>
-            </div>
+            <div><b>{{ log.player.user.get_full_name }}</b> → <span>{{ log.winning_team.name }}</span></div>
+            <div class="ms-auto"><span class="badge bg-light text-dark fs-6">₹{{ log.final_amount }}</span></div>
         </div>
         {% endfor %}
     </div>
 </div>
 {% endif %}
 
-<!-- Dynamic Content Sections -->
-{% for section in content_sections %}
-<div class="container">
-    <div class="content-section">
-        <h2><i class="bi bi-{{ section.section_type }}"></i> {{ section.title }}</h2>
-        <div class="row align-items-center">
-            {% if section.image %}
-            <div class="col-md-6 mb-3">
-                <img src="{{ section.image.url }}" alt="{{ section.title }}" class="img-fluid">
-            </div>
-            <div class="col-md-6">
-                {{ section.content|safe }}
-            </div>
-            {% else %}
-            <div class="col-12">
-                {{ section.content|safe }}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-{% endfor %}
-
-<!-- Participating Teams -->
+<!-- TEAMS -->
 {% if teams %}
 <div class="container">
-    <div class="content-section">
-        <h2 class="text-center mb-5">
-            <i class="bi bi-shield-fill-check"></i> Participating Teams
-        </h2>
-        <div class="row">
+    <div class="content-section text-center">
+        <h2 class="fw-bold mb-4"><i class="bi bi-shield-fill-check"></i> Participating Teams</h2>
+        <div class="row g-4">
             {% for team in teams %}
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="card team-card h-100">
-                    <div class="card-body">
-                        <div class="team-logo-container">
-                            {% if team.logo %}
-                                <img src="{{ team.logo.url }}" alt="{{ team.name }}" class="img-fluid" style="max-height: 100px;">
-                            {% else %}
-                                <i class="bi bi-shield-fill text-primary" style="font-size: 4rem;"></i>
-                            {% endif %}
-                        </div>
-                        <h5 class="card-title text-center">{{ team.name }}</h5>
-                        <div class="text-center text-muted">
-                            <small><i class="bi bi-people"></i> {{ team.players.count }} Players</small>
-                        </div>
-                        <div class="text-center text-muted">
-                            <small><i class="bi bi-wallet2"></i> ₹{{ team.purse_remaining }} remaining</small>
-                        </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card team-card h-100 p-2">
+                    <div class="team-logo-container">
+                        {% if team.logo %}
+                        <img src="{{ team.logo.url }}" class="img-fluid" style="max-height: 100px;">
+                        {% else %}
+                        <i class="bi bi-shield-fill text-primary" style="font-size:4rem"></i>
+                        {% endif %}
                     </div>
+                    <h5 class="mt-2">{{ team.name }}</h5>
+                    <small class="text-muted"><i class="bi bi-people"></i> {{ team.players.count }} Players</small><br>
+                    <small class="text-muted"><i class="bi bi-wallet2"></i> ₹{{ team.purse_remaining }} left</small>
                 </div>
             </div>
             {% endfor %}
@@ -437,38 +263,30 @@
 </div>
 {% endif %}
 
-<!-- How It Works -->
+<!-- HOW IT WORKS -->
 <div class="container">
-    <div class="how-it-works">
-        <h2 class="text-center mb-5">How It Works</h2>
-        <div class="row">
-            <div class="col-md-3 col-6 mb-4">
-                <div class="step-card">
-                    <div class="step-icon"><i class="bi bi-person-plus-fill"></i></div>
-                    <h4>1. Register</h4>
-                    <p>Sign up as a player, team owner, or manager</p>
-                </div>
+    <div class="how-it-works text-center">
+        <h2 class="fw-bold mb-4"><i class="bi bi-lightbulb"></i> How It Works</h2>
+        <div class="row text-center">
+            <div class="col-6 col-md-3 step-card">
+                <i class="bi bi-person-plus-fill step-icon"></i>
+                <h5>1. Register</h5>
+                <p>Join as Player / Owner / Manager</p>
             </div>
-            <div class="col-md-3 col-6 mb-4">
-                <div class="step-card">
-                    <div class="step-icon"><i class="bi bi-check-circle-fill"></i></div>
-                    <h4>2. Get Approved</h4>
-                    <p>Admin reviews and approves registrations</p>
-                </div>
+            <div class="col-6 col-md-3 step-card">
+                <i class="bi bi-check-circle-fill step-icon"></i>
+                <h5>2. Approval</h5>
+                <p>Admin verifies profiles</p>
             </div>
-            <div class="col-md-3 col-6 mb-4">
-                <div class="step-card">
-                    <div class="step-icon"><i class="bi bi-hammer"></i></div>
-                    <h4>3. Live Auction</h4>
-                    <p>Teams bid for players in real-time</p>
-                </div>
+            <div class="col-6 col-md-3 step-card">
+                <i class="bi bi-hammer step-icon"></i>
+                <h5>3. Auction</h5>
+                <p>Real-time live bidding</p>
             </div>
-            <div class="col-md-3 col-6 mb-4">
-                <div class="step-card">
-                    <div class="step-icon"><i class="bi bi-trophy-fill"></i></div>
-                    <h4>4. Play Cricket</h4>
-                    <p>Compete in the tournament</p>
-                </div>
+            <div class="col-6 col-md-3 step-card">
+                <i class="bi bi-trophy-fill step-icon"></i>
+                <h5>4. Compete</h5>
+                <p>Play the Tournament</p>
             </div>
         </div>
     </div>
@@ -478,14 +296,10 @@
 
 {% block extra_js %}
 <script>
-    // Auto-advance carousel
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener("DOMContentLoaded", function () {
         const carousel = document.querySelector('#heroCarousel');
         if (carousel) {
-            new bootstrap.Carousel(carousel, {
-                interval: 5000,
-                ride: 'carousel'
-            });
+            new bootstrap.Carousel(carousel, { interval: 5000, ride: 'carousel' });
         }
     });
 </script>
