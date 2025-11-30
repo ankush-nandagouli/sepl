@@ -10,7 +10,7 @@ from .models import User, Team, Player, AuctionSession, Bid, AuctionLog, Tournam
 from .forms import UserRegistrationForm, PlayerRegistrationForm, TeamCreationForm, AuctionSessionForm, UserProfileEditForm, PlayerProfileEditForm, PlayerDetailsEditForm
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
-
+from .utils import broadcast_bid_update, broadcast_player_update, broadcast_bidding_end
 
 
 
@@ -783,7 +783,12 @@ def auctioneer_dashboard(request):
 @login_required
 @user_passes_test(is_auctioneer)
 def auctioneer_quick_bid(request):
-    """Quick bid entry via AJAX - for when team owner paddles"""
+    """
+    Quick bid entry via AJAX - for when team owner paddles
+    
+    This is now the ONLY way to place bids in the system.
+    Team owners cannot bid directly anymore.
+    """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method'})
     
@@ -866,18 +871,25 @@ def auctioneer_quick_bid(request):
                 if t.can_buy_player() and t.purse_remaining >= next_bid:
                     can_bid_teams.append(t.id)
             
-            return JsonResponse({
+            bid_data = {
                 'success': True,
                 'bid_id': bid.id,
                 'team_name': team.name,
                 'team_id': team.id,
                 'player_id': player.id,
+                'player_name': player.user.get_full_name(),
                 'amount': amount,
                 'next_bid': next_bid,
-                'team_purse_remaining': team.purse_remaining,
+                'purse_remaining': team.purse_remaining,
+                'team_slots_remaining': team.slots_remaining(),
                 'can_bid_teams': can_bid_teams,
                 'timestamp': bid.timestamp.isoformat(),
-            })
+            }
+            
+            # IMPORTANT: Broadcast to all WebSocket clients
+            broadcast_bid_update(bid_data)
+            
+            return JsonResponse(bid_data)
             
     except Team.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Team not found'})
@@ -892,7 +904,7 @@ def auctioneer_quick_bid(request):
 @login_required
 @user_passes_test(is_auctioneer)
 def auctioneer_start_player(request):
-    """Start bidding for a player"""
+    """Start bidding for a player - broadcasts to all clients"""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request'})
     
@@ -917,16 +929,23 @@ def auctioneer_start_player(request):
             session.bid_call_count = 0
             session.save()
             
-            return JsonResponse({
+            player_data = {
                 'success': True,
                 'player': {
                     'id': player.id,
                     'name': player.user.get_full_name(),
                     'category': player.get_category_display(),
                     'base_price': player.base_price,
+                    'current_bid': 0,
+                    'next_bid': player.base_price,
                     'photo': player.user.profile_picture.url if player.user.profile_picture else None,
                 }
-            })
+            }
+            
+            # Broadcast to all WebSocket clients
+            broadcast_player_update(player_data)
+            
+            return JsonResponse(player_data)
             
     except Player.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Player not found'})
@@ -937,7 +956,7 @@ def auctioneer_start_player(request):
 @login_required
 @user_passes_test(is_auctioneer)
 def auctioneer_complete_sale(request):
-    """Mark player as sold/unsold"""
+    """Mark player as sold/unsold - broadcasts to all clients"""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request'})
     
@@ -986,13 +1005,20 @@ def auctioneer_complete_sale(request):
                     sold=True
                 )
                 
-                return JsonResponse({
+                result_data = {
                     'success': True,
                     'sold': True,
                     'team_name': team.name,
+                    'team_id': team.id,
                     'amount': winning_bid.amount,
                     'player_name': player.user.get_full_name(),
-                })
+                    'player_id': player.id,
+                }
+                
+                # Broadcast to all WebSocket clients
+                broadcast_bidding_end(result_data)
+                
+                return JsonResponse(result_data)
             else:
                 # Unsold
                 player.status = 'unsold'
@@ -1005,15 +1031,20 @@ def auctioneer_complete_sale(request):
                     sold=False
                 )
                 
-                return JsonResponse({
+                result_data = {
                     'success': True,
                     'sold': False,
                     'player_name': player.user.get_full_name(),
-                })
+                    'player_id': player.id,
+                }
+                
+                # Broadcast to all WebSocket clients
+                broadcast_bidding_end(result_data)
+                
+                return JsonResponse(result_data)
                 
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
-
 
 @login_required
 @user_passes_test(is_auctioneer)
