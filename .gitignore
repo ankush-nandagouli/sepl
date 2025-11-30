@@ -1,0 +1,62 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.sqlite3
+*.log
+
+# Django
+*.pot
+*.py[cod]
+db.sqlite3
+local_settings.py
+
+# Environment / virtualenv
+venv/
+env/
+ENV/
+.venv/
+*.env
+.env
+
+# IDEs / Editors
+.vscode/
+.idea/
+
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Media / uploads
+media/
+staticfiles/
+static_root/
+
+# Secrets
+*.key
+*.pem
+*.p12
+
+# MySQL / Database dumps
+*.sql
+*.dump
+
+
+# Coverage / Testing
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+
+# Misc
+*.bak
+*.orig
+*.tmp
+
+# Sentry / Error tracking config (optional)
+sentry.properties
