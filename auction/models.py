@@ -9,6 +9,7 @@ class User(AbstractUser):
         ('team_manager', 'Team Manager'),
         ('umpire', 'Umpire'),
         ('auctioneer', 'Auctioneer'),
+        ('admin', 'Administrator'),
     )
     
     PLAYER_TYPES = (
