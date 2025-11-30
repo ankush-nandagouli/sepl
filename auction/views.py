@@ -709,64 +709,70 @@ def auctioneer_dashboard(request):
     active_session = AuctionSession.objects.filter(status='live').first()
     
     if not active_session:
-        # Show auction sessions to start
         sessions = AuctionSession.objects.filter(
             status__in=['upcoming', 'paused']
         ).order_by('-created_at')
-        
+
         return render(request, 'auctioneer/no_auction.html', {
             'sessions': sessions
         })
     
-    # Get current player details
     current_player = active_session.current_player
-    current_bids = []
+    current_bids_qs = Bid.objects.none()
     paddle_raises = []
-    
+
+    # Fetch real bidding data if a player is selected
     if current_player:
-        current_bids = Bid.objects.filter(
+        current_bids_qs = Bid.objects.filter(
             player=current_player,
             auction_session=active_session
-        ).select_related('team').order_by('-amount')[:5]
-        
-        # Get unacknowledged paddle raises
+        ).select_related('team').order_by('-amount')
+
+        # Last 5 bids for UI display
+        current_bids = list(current_bids_qs[:5])
+
+        # Unacknowledged paddles
         paddle_raises = PaddleRaise.objects.filter(
             player=current_player,
             auction_session=active_session,
             acknowledged=False
         ).select_related('team').order_by('raised_at')
-    
-    # Get all teams with quick stats
-    teams = Team.objects.annotate(
-        player_count=Count('players'),
-    ).select_related('owner').order_by('name')
-    
-    # Add additional stats for each team
+    else:
+        current_bids = []
+
+    # Team Stats Builder
     team_stats = []
+    teams = Team.objects.annotate(
+        player_count=Count('players')
+    ).select_related('owner').order_by('name')
+
     for team in teams:
+        last_bid = current_bids_qs.filter(team=team).first() if current_player else None
+
+        next_bid_increment = 50 if (current_player and current_player.current_bid < 700) else 100
+        next_bid_val = current_player.current_bid + next_bid_increment if current_player else 0
+
         stats = {
             'team': team,
             'purse_remaining': team.purse_remaining,
-            'purse_percentage': (team.purse_remaining / team.total_purse * 100) if team.total_purse > 0 else 0,
+            'purse_percentage': (team.purse_remaining / team.total_purse * 100) if team.total_purse else 0,
             'players_count': team.players.count(),
             'slots_remaining': team.slots_remaining(),
-            'can_bid': team.can_buy_player() and team.purse_remaining >= (current_player.current_bid + 50 if current_player and current_player.current_bid < 700 else current_player.current_bid + 100) if current_player else False,
-            'last_bid': current_bids.filter(team=team).first() if current_bids else None,
+            'can_bid': current_player and team.can_buy_player() and team.purse_remaining >= next_bid_val,
+            'last_bid': last_bid,
         }
         team_stats.append(stats)
-    
-    # Get available players
+
+    # Players available for next selection
     available_players = Player.objects.filter(
         status='approved'
     ).select_related('user').order_by('base_price')[:20]
-    
-    # Recent auction logs
-    from .models import AuctionLog
+
     recent_sales = AuctionLog.objects.filter(
         auction_session=active_session
     ).select_related('player__user', 'winning_team').order_by('-timestamp')[:10]
-    
-    context = {
+
+    return render(request, 'auctioneer/dashboard.html', {
         'session': active_session,
         'current_player': current_player,
         'current_bids': current_bids,
@@ -775,9 +781,7 @@ def auctioneer_dashboard(request):
         'available_players': available_players,
         'recent_sales': recent_sales,
         'total_teams': teams.count(),
-    }
-    
-    return render(request, 'auctioneer/dashboard.html', context)
+    })
 
 
 @login_required
