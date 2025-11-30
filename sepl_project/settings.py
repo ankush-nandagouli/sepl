@@ -82,9 +82,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-# CELERY CONFIGURATION (if you need background tasks)
+# Celery Configuration
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_ACCEPT_CONTENT = ['json']
@@ -101,6 +99,7 @@ DATABASES = {
         ssl_require=True
     )
 }
+
 
 
 # Password validation

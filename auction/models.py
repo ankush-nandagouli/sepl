@@ -1,4 +1,3 @@
-# auction/models.py - SIMPLIFIED USER MODEL
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -9,6 +8,7 @@ class User(AbstractUser):
         ('team_owner', 'Team Owner'),
         ('team_manager', 'Team Manager'),
         ('umpire', 'Umpire'),
+        ('auctioneer', 'Auctioneer'),
     )
     
     PLAYER_TYPES = (
@@ -50,11 +50,38 @@ class User(AbstractUser):
     branch = models.CharField(max_length=20, choices=BRANCH_CHOICES, blank=True, null=True)
     year_of_study = models.CharField(max_length=1, choices=YEAR_CHOICES, blank=True, null=True)
     
+    #user suspension fields
+    suspended = models.BooleanField(default=False, help_text="Suspend user from system")
+    suspension_reason = models.TextField(blank=True, help_text="Reason for suspension")
+    suspended_at = models.DateTimeField(null=True, blank=True)
+    suspended_by = models.ForeignKey(
+        'self', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='suspended_users'
+    )
     class Meta:
         db_table = 'auth_user'
     
-    # REMOVED clean() method - no validation at model level
-
+    def suspend_user(self, admin_user, reason=""):
+        """Suspend this user"""
+        self.suspended = True
+        self.is_active = False  # Also deactivate account
+        self.suspension_reason = reason
+        self.suspended_by = admin_user
+        from django.utils import timezone
+        self.suspended_at = timezone.now()
+        self.save()
+    
+    def unsuspend_user(self):
+        """Restore user access"""
+        self.suspended = False
+        self.is_active = True
+        self.suspension_reason = ""
+        self.suspended_by = None
+        self.suspended_at = None
+        self.save()
 
 class Team(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -84,6 +111,26 @@ class Team(models.Model):
         """Get remaining player slots"""
         return self.max_players - self.players.count()
 
+class PaddleRaise(models.Model):
+    """Track when team owners raise their paddle during auction"""
+    auction_session = models.ForeignKey('AuctionSession', on_delete=models.CASCADE, related_name='paddle_raises')
+    player = models.ForeignKey('Player', on_delete=models.CASCADE)
+    team = models.ForeignKey('Team', on_delete=models.CASCADE)
+    amount = models.IntegerField(help_text="Bid amount when paddle was raised")
+    raised_at = models.DateTimeField(auto_now_add=True)
+    acknowledged = models.BooleanField(default=False, help_text="Auctioneer acknowledged this paddle")
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-raised_at']
+        indexes = [
+            models.Index(fields=['player', 'auction_session', '-raised_at']),
+            models.Index(fields=['acknowledged', 'auction_session']),
+        ]
+    
+    def __str__(self):
+        status = "✓" if self.acknowledged else "⏳"
+        return f"{status} {self.team.name} - ₹{self.amount}"
 
 class Player(models.Model):
     PLAYER_CATEGORIES = (
@@ -133,6 +180,21 @@ class AuctionSession(models.Model):
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    
+    last_bid_team = models.ForeignKey(
+        'Team', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='last_bid_sessions',
+        help_text="Last team that bid on current player"
+    )
+    bid_call_count = models.IntegerField(
+        default=0, 
+        help_text="Number of times auctioneer called 'Going once, twice...'"
+    )
+    
     
     def __str__(self):
         return f"{self.name} - {self.status}"

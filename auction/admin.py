@@ -2,12 +2,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
-from .models import User, Team, Player, AuctionSession, Bid, AuctionLog
+from .models import User, Team, Player, AuctionSession, Bid, AuctionLog, PaddleRaise
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     list_display = ['username', 'email', 'first_name', 'last_name', 'user_type', 'player_type_display', 'profile_pic_display']
-    list_filter = ['user_type', 'player_type', 'course', 'branch', 'is_staff', 'is_active']
+    list_filter = ['user_type', 'player_type', 'course', 'branch', 'is_staff', 'is_active', 'suspended']
     search_fields = ['username', 'email', 'first_name', 'last_name', 'roll_number']
     
     fieldsets = BaseUserAdmin.fieldsets + (
@@ -131,21 +131,52 @@ class PlayerAdmin(admin.ModelAdmin):
 
 @admin.register(AuctionSession)
 class AuctionSessionAdmin(admin.ModelAdmin):
-    list_display = ['name', 'status', 'current_player', 'started_at', 'ended_at']
+    list_display = ['name', 'status', 'current_player', 'last_bid_team', 'bid_call_count','started_at', 'ended_at']
     list_filter = ['status', 'started_at']
-    readonly_fields = ['created_at']
+    readonly_fields = ['created_at', 'bid_call_count']
     
     fieldsets = (
         ('Session Information', {
             'fields': ('name', 'status')
         }),
         ('Current State', {
-            'fields': ('current_player',)
+            'fields': ('current_player', 'last_bid_team', 'bid_call_count')
         }),
         ('Timestamps', {
             'fields': ('started_at', 'ended_at', 'created_at')
         }),
     )
+
+@admin.register(PaddleRaise)
+class PaddleRaiseAdmin(admin.ModelAdmin):
+    list_display = ['team_name', 'player_name', 'amount', 'acknowledged', 'raised_at']
+    list_filter = ['acknowledged', 'auction_session', 'team', 'raised_at']
+    search_fields = ['team__name', 'player__user__first_name', 'player__user__last_name']
+    readonly_fields = ['raised_at', 'acknowledged_at']
+    date_hierarchy = 'raised_at'
+    
+    def team_name(self, obj):
+        return obj.team.name
+    team_name.short_description = 'Team'
+    team_name.admin_order_field = 'team__name'
+    
+    def player_name(self, obj):
+        return obj.player.user.get_full_name()
+    player_name.short_description = 'Player'
+    
+    actions = ['mark_acknowledged', 'mark_unacknowledged']
+    
+    def mark_acknowledged(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(acknowledged=True, acknowledged_at=timezone.now())
+        self.message_user(request, f'{updated} paddle raise(s) marked as acknowledged.')
+    mark_acknowledged.short_description = "Mark as acknowledged"
+    
+    def mark_unacknowledged(self, request, queryset):
+        updated = queryset.update(acknowledged=False, acknowledged_at=None)
+        self.message_user(request, f'{updated} paddle raise(s) marked as unacknowledged.')
+    mark_unacknowledged.short_description = "Mark as unacknowledged"
+
 
 @admin.register(Bid)
 class BidAdmin(admin.ModelAdmin):

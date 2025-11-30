@@ -1,0 +1,88 @@
+<!-- templates/auctioneer/no_auction.html -->
+{% extends 'base.html' %}
+
+{% block title %}No Active Auction - SEPL{% endblock %}
+
+{% block extra_css %}
+<style>
+    .no-auction-container {
+        text-align: center;
+        padding: 60px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        color: white;
+    }
+    
+    .session-card {
+        background: white;
+        color: #333;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .session-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="no-auction-container">
+    <i class="bi bi-exclamation-triangle" style="font-size: 5rem; opacity: 0.8;"></i>
+    <h2 class="mt-4">No Active Auction Session</h2>
+    <p class="lead">There are currently no live auction sessions.</p>
+</div>
+
+{% if sessions %}
+<div class="mt-5">
+    <h4 class="mb-4">Available Auction Sessions</h4>
+    
+    {% for session in sessions %}
+    <div class="session-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5>{{ session.name }}</h5>
+                <p class="mb-2">
+                    <span class="badge {% if session.status == 'upcoming' %}bg-info{% else %}bg-warning{% endif %}">
+                        {{ session.get_status_display }}
+                    </span>
+                </p>
+                <small class="text-muted">
+                    Created: {{ session.created_at|date:"M d, Y - h:i A" }}
+                </small>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if user.is_staff or user.user_type == 'admin' %}
+                <form method="POST" action="{% url 'start_auction_session' session.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-play-fill"></i> Start Session
+                    </button>
+                </form>
+                {% else %}
+                <button class="btn btn-secondary" disabled>
+                    <i class="bi bi-lock"></i> Admin Only
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info mt-4">
+    <i class="bi bi-info-circle"></i> No auction sessions have been created yet. 
+    Please contact the administrator to create a new auction session.
+</div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+{% endblock %}
