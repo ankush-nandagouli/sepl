@@ -762,6 +762,25 @@ def auctioneer_dashboard(request):
             'last_bid': last_bid,
         }
         team_stats.append(stats)
+        
+     # SEARCH FUNCTIONALITY
+    search_query = request.GET.get('search', '').strip()
+    
+    if search_query:
+        # Search by name, category, roll number
+        available_players = Player.objects.filter(
+            status='approved'
+        ).filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(user__roll_number__icontains=search_query) |
+            Q(category__icontains=search_query)
+        ).select_related('user').order_by('base_price')
+    else:
+        # Show first 20 players
+        available_players = Player.objects.filter(
+            status='approved'
+        ).select_related('user').order_by('base_price')[:20]
 
     # Players available for next selection
     available_players = Player.objects.filter(
@@ -781,6 +800,7 @@ def auctioneer_dashboard(request):
         'available_players': available_players,
         'recent_sales': recent_sales,
         'total_teams': teams.count(),
+        'search_query': search_query,
     })
 
 
@@ -960,7 +980,10 @@ def auctioneer_start_player(request):
 @login_required
 @user_passes_test(is_auctioneer)
 def auctioneer_complete_sale(request):
-    """Mark player as sold/unsold - broadcasts to all clients"""
+    """
+    Mark player as sold/unsold - broadcasts to all clients
+    
+    """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request'})
     
@@ -977,30 +1000,54 @@ def auctioneer_complete_sale(request):
             
             player = Player.objects.select_for_update().get(id=player_id)
             
+            # CRITICAL FIX: Check if player is already sold/unsold
+            if player.status in ['sold', 'unsold']:
+                return JsonResponse({
+                    'success': False, 
+                    'message': f'Player already {player.status}! Cannot process again.',
+                    'already_processed': True
+                })
+            
+            # ADDITIONAL CHECK: Verify this is the current player
+            if not session.current_player or session.current_player.id != player.id:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'This player is not currently being auctioned'
+                })
+            
             winning_bid = Bid.objects.filter(
                 player=player,
                 auction_session=session
             ).order_by('-amount').first()
             
             if winning_bid:
-                # Sold
+                # Player SOLD
                 team = Team.objects.select_for_update().get(id=winning_bid.team_id)
                 
+                # Check team can still buy
                 if not team.can_buy_player():
                     return JsonResponse({
                         'success': False,
                         'message': f'{team.name} has reached maximum player limit'
                     })
                 
+                # Check team still has enough purse
+                if team.purse_remaining < winning_bid.amount:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'{team.name} no longer has enough purse (someone else may have bought players)'
+                    })
+                
+                # Mark player as SOLD
                 player.status = 'sold'
                 player.team = team
                 player.save()
                 
-                # Update team purse
+                # Deduct from team purse
                 team.purse_remaining -= winning_bid.amount
                 team.save()
                 
-                # Log
+                # Create auction log
                 AuctionLog.objects.create(
                     auction_session=session,
                     player=player,
@@ -1008,6 +1055,12 @@ def auctioneer_complete_sale(request):
                     final_amount=winning_bid.amount,
                     sold=True
                 )
+                
+                # Clear current player from session
+                session.current_player = None
+                session.last_bid_team = None
+                session.bid_call_count = 0
+                session.save()
                 
                 result_data = {
                     'success': True,
@@ -1017,6 +1070,7 @@ def auctioneer_complete_sale(request):
                     'amount': winning_bid.amount,
                     'player_name': player.user.get_full_name(),
                     'player_id': player.id,
+                    'team_purse_remaining': team.purse_remaining,
                 }
                 
                 # Broadcast to all WebSocket clients
@@ -1024,16 +1078,23 @@ def auctioneer_complete_sale(request):
                 
                 return JsonResponse(result_data)
             else:
-                # Unsold
+                # Player UNSOLD
                 player.status = 'unsold'
                 player.save()
                 
+                # Create auction log
                 AuctionLog.objects.create(
                     auction_session=session,
                     player=player,
                     final_amount=player.base_price,
                     sold=False
                 )
+                
+                # Clear current player from session
+                session.current_player = None
+                session.last_bid_team = None
+                session.bid_call_count = 0
+                session.save()
                 
                 result_data = {
                     'success': True,
@@ -1047,8 +1108,15 @@ def auctioneer_complete_sale(request):
                 
                 return JsonResponse(result_data)
                 
+    except Player.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Player not found'})
+    except Team.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Team not found'})
     except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)})
+        import traceback
+        print(f"Error in complete_sale: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
 
 @login_required
 @user_passes_test(is_auctioneer)

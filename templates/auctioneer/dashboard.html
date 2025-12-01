@@ -1,4 +1,4 @@
-<!-- templates/auctioneer/dashboard.html -->
+
 {% extends 'base.html' %}
 
 {% block title %}Auctioneer Control Panel - SEPL{% endblock %}
@@ -144,6 +144,13 @@
         color: white;
     }
     
+    .control-btn:disabled {
+        background: #374151 !important;
+        cursor: not-allowed;
+        opacity: 0.5;
+        animation: none !important;
+    }
+    
     .player-queue-item {
         background: #0f3460;
         padding: 10px 15px;
@@ -185,7 +192,6 @@
         min-width: 300px;
     }
     
-    /* Keyboard shortcuts display */
     .shortcuts-bar {
         background: rgba(0,0,0,0.8);
         padding: 10px;
@@ -204,7 +210,6 @@
         margin: 0 3px;
     }
     
-    /* Real-time indicators */
     .live-indicator {
         display: inline-block;
         width: 12px;
@@ -223,6 +228,20 @@
     .content-wrapper {
         background: transparent !important;
         box-shadow: none !important;
+    }
+    
+    .search-box {
+        background: #0f3460;
+        border: 2px solid #1e4a7a;
+        color: white;
+        border-radius: 10px;
+        padding: 10px 15px;
+    }
+    
+    .search-box:focus {
+        border-color: #f59e0b;
+        outline: none;
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
     }
 </style>
 {% endblock %}
@@ -310,6 +329,7 @@
             <button class="control-btn unsold btn-lg" id="unsoldBtn" onclick="markUnsold()">
                 <i class="bi bi-x-circle"></i> Unsold (U)
             </button>
+            <div class="mt-2 small text-muted" id="controlStatus"></div>
         </div>
         
         <!-- Bid History -->
@@ -398,12 +418,32 @@
             </div>
         </div>
         
-        <!-- Player Queue -->
+        <!-- Player Queue with SEARCH -->
         <div class="control-panel">
             <h5 class="text-white mb-3">
                 <i class="bi bi-list-ul"></i> Player Queue
-                <small class="float-end text-muted" style="font-size: 0.8rem;">{{ available_players|length }} remaining</small>
             </h5>
+            
+            <!-- SEARCH BAR -->
+            <form method="GET" class="mb-3">
+                <div class="input-group">
+                    <input type="text" 
+                           name="search" 
+                           class="form-control search-box" 
+                           placeholder="Search player name, roll no..." 
+                           value="{{ search_query }}"
+                           autocomplete="off">
+                    <button class="btn btn-warning" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    {% if search_query %}
+                    <a href="?" class="btn btn-secondary">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+            
             <div style="max-height: 300px; overflow-y: auto;">
                 {% for player in available_players %}
                 <div class="player-queue-item" onclick="startPlayer({{ player.id }}, '{{ player.user.get_full_name }}')">
@@ -413,6 +453,9 @@
                             <br>
                             <small class="text-muted">
                                 {{ player.get_category_display }} • ₹{{ player.base_price }}
+                                {% if player.user.roll_number %}
+                                    • {{ player.user.roll_number }}
+                                {% endif %}
                             </small>
                         </div>
                         <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); startPlayer({{ player.id }}, '{{ player.user.get_full_name }}')">
@@ -422,7 +465,11 @@
                 </div>
                 {% empty %}
                 <div class="text-center text-muted py-3">
-                    No more players available
+                    {% if search_query %}
+                        No players found matching "{{ search_query }}"
+                    {% else %}
+                        No more players available
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
@@ -489,6 +536,7 @@
 const csrfToken = '{{ csrf_token }}';
 let currentPlayerId = parseInt(document.getElementById('currentPlayerId').value) || null;
 let processingBid = false;
+let processingComplete = false;  // NEW: Track if completing sale
 
 // Show toast notification
 function showToast(message, type = 'info') {
@@ -503,6 +551,35 @@ function showToast(message, type = 'info') {
     setTimeout(() => toast.remove(), 4000);
 }
 
+// Disable control buttons
+function disableControlButtons(message = '') {
+    const soldBtn = document.getElementById('soldBtn');
+    const unsoldBtn = document.getElementById('unsoldBtn');
+    const goingBtn = document.getElementById('goingBtn');
+    
+    soldBtn.disabled = true;
+    unsoldBtn.disabled = true;
+    goingBtn.disabled = true;
+    
+    if (message) {
+        document.getElementById('controlStatus').innerHTML = 
+            `<span class="text-warning">⚠️ ${message}</span>`;
+    }
+}
+
+// Enable control buttons
+function enableControlButtons() {
+    const soldBtn = document.getElementById('soldBtn');
+    const unsoldBtn = document.getElementById('unsoldBtn');
+    const goingBtn = document.getElementById('goingBtn');
+    
+    soldBtn.disabled = false;
+    unsoldBtn.disabled = false;
+    goingBtn.disabled = false;
+    
+    document.getElementById('controlStatus').innerHTML = '';
+}
+
 // Quick bid for a team
 async function quickBid(teamId, teamName) {
     if (!currentPlayerId) {
@@ -512,6 +589,11 @@ async function quickBid(teamId, teamName) {
     
     if (processingBid) {
         showToast('Processing previous bid...', 'info');
+        return;
+    }
+    
+    if (processingComplete) {
+        showToast('Player auction is being completed...', 'warning');
         return;
     }
     
@@ -640,6 +722,11 @@ async function startPlayer(playerId, playerName) {
 
 // Call going once/twice
 async function callGoing() {
+    if (processingComplete) {
+        showToast('Player auction is being completed...', 'warning');
+        return;
+    }
+    
     try {
         const formData = new FormData();
         formData.append('csrfmiddlewaretoken', csrfToken);
@@ -667,6 +754,15 @@ async function callGoing() {
 async function completeSale() {
     if (!currentPlayerId) return;
     
+    // CRITICAL FIX: Prevent double-clicking
+    if (processingComplete) {
+        showToast('Already processing sale, please wait...', 'warning');
+        return;
+    }
+    
+    processingComplete = true;
+    disableControlButtons('Processing sale...');
+    
     try {
         const formData = new FormData();
         formData.append('player_id', currentPlayerId);
@@ -688,10 +784,20 @@ async function completeSale() {
             
             setTimeout(() => location.reload(), 2000);
         } else {
-            showToast(data.message, 'danger');
+            // Check if already processed
+            if (data.already_processed) {
+                showToast(data.message, 'warning');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.message, 'danger');
+                processingComplete = false;
+                enableControlButtons();
+            }
         }
     } catch (error) {
         showToast('Error: ' + error.message, 'danger');
+        processingComplete = false;
+        enableControlButtons();
     }
 }
 
