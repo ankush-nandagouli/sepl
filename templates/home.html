@@ -186,6 +186,53 @@
 </div>
 {% endif %}
 
+<!-- SECONDARY BANNERS POPUP MODAL -->
+{% if secondary_banners %}
+<div class="modal fade" id="promoModal" tabindex="-1" aria-labelledby="promoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius:15px; overflow:hidden;">
+      
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="promoModalLabel">
+          🌟 Announcements & Updates
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-0">
+        <div id="promoCarousel" class="carousel slide" data-bs-ride="carousel">
+          <div class="carousel-inner">
+            {% for banner in secondary_banners %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+              <img src="{{ banner.image.url }}" class="d-block w-100" style="max-height:450px; object-fit:cover;">
+              <div class="p-3 bg-dark text-white">
+                <h5>{{ banner.heading }}</h5>
+                <p>{{ banner.description|default:"" }}</p>
+                {% if banner.button_link %}
+                <a href="{{ banner.button_link }}" class="btn btn-warning btn-sm mt-2">
+                    {{ banner.button_text|default:"Learn More" }}
+                </a>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+          </button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
 
 <!-- PROMO SECTION -->
 <div class="container my-5">
@@ -331,5 +378,15 @@
             new bootstrap.Carousel(carousel, { interval: 5000, ride: 'carousel' });
         }
     });
+    document.addEventListener("DOMContentLoaded", function () {
+    const modalShown = sessionStorage.getItem("promo_shown");
+    const promoModal = document.getElementById("promoModal");
+
+    if (promoModal && !modalShown) {
+        const modal = new bootstrap.Modal(promoModal);
+        modal.show();
+        sessionStorage.setItem("promo_shown", "true");
+    }
+});
 </script>
 {% endblock %}
