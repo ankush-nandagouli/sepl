@@ -4,7 +4,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from .models import User, Team, Player, AuctionSession, Bid, AuctionLog, TournamentBanner, TournamentContent, TournamentStats, SocialMediaLink, PaddleRaise
 from .forms import UserRegistrationForm, PlayerRegistrationForm, TeamCreationForm, AuctionSessionForm, UserProfileEditForm, PlayerProfileEditForm, PlayerDetailsEditForm
@@ -1176,3 +1176,21 @@ def auctioneer_team_info(request, team_id):
         })
     except Team.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Team not found'})
+    
+    
+def robots_txt(request):
+    """Serve robots.txt for search engines"""
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /accounts/",
+        "Disallow: /static/admin/",
+        "",
+        "# Sitemap",
+        f"Sitemap: {request.build_absolute_uri('/sitemap.xml')}",
+        "",
+        "# Crawl-delay",
+        "Crawl-delay: 1",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")

@@ -1,5 +1,22 @@
-from django.urls import path
+from django.urls import path, include
+from django.contrib.sitemaps.views import sitemap
+from .sitemaps import (
+    StaticViewSitemap, 
+    TeamSitemap, 
+    PlayerSitemap, 
+    AuctionSessionSitemap,
+    TournamentContentSitemap
+)
 from . import views
+
+# Sitemap configuration
+sitemaps = {
+    'static': StaticViewSitemap,
+    'teams': TeamSitemap,
+    'players': PlayerSitemap,
+    'auctions': AuctionSessionSitemap,
+    'content': TournamentContentSitemap,
+}
 
 urlpatterns = [
     # Public pages
@@ -54,4 +71,8 @@ urlpatterns = [
     
     # Umpire URLs
     path('umpire/dashboard/', views.umpire_dashboard, name='umpire_dashboard'),
+    
+        # SEO URLs - Django Sitemap
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    path('robots.txt', views.robots_txt, name='robots_txt'),
 ]

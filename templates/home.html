@@ -186,6 +186,35 @@
 </div>
 {% endif %}
 
+
+<!-- PROMO SECTION -->
+<div class="container my-5">
+    <div class="content-section text-center" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color:white;">
+        <h2 class="fw-bold display-5">
+            🌟 Satpuda Engineering Premier League – Join Now!
+        </h2>
+        <p class="lead mt-3">
+            Be a part of the most exciting cricket battle of Satpuda. Register today and take your first step to glory!
+        </p>
+
+        <div class="mt-4">
+            {% if not user.is_authenticated %}
+            <a href="{% url 'register' %}" class="btn btn-warning btn-lg me-3 px-4 py-2 shadow">
+                <i class="bi bi-person-plus-fill"></i> Register
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-light btn-lg px-4 py-2 shadow">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+            {% else %}
+            <a href="{% url 'dashboard' %}" class="btn btn-warning btn-lg px-4 py-2 shadow">
+                <i class="bi bi-speedometer2"></i> Go to Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
 <!-- STATS -->
 <div class="stats-section container text-center">
     <h2 class="mb-5 text-white fw-bold"><i class="bi bi-bar-chart"></i> Tournament Overview</h2>

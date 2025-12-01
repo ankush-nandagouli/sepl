@@ -1,12 +1,116 @@
-<!-- templates/base.html - UPDATED VERSION -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Primary Meta Tags -->
     <title>
-      {% block title %}SEPL - Satpuda Engineering Premier League{% endblock %}
+      {% block title %}SEPL - Satpuda Engineering Premier League | Official
+      Cricket Tournament{% endblock %}
     </title>
+    <meta
+      name="title"
+      content="{% block meta_title %}SEPL - Satpuda Engineering Premier League | Official Cricket Tournament{% endblock %}"
+    />
+    <meta
+      name="description"
+      content="{% block meta_description %}Satpuda Engineering Premier League (SEPL) - Official intra-college cricket tournament management system. Live auction, player registration, team management for Satpuda College cricket championship.{% endblock %}"
+    />
+    <meta
+      name="keywords"
+      content="{% block meta_keywords %}SEPL, Satpuda Engineering Premier League, Satpuda Premier League, Satpuda College Premier League, Satpuda Cricket League, SEPL Live, Satpuda Engineering College Cricket, College Cricket Tournament, IPL Style Auction, Cricket Player Auction, Satpuda Sports, Engineering College Cricket{% endblock %}"
+    />
+    <meta name="author" content="Satpuda Engineering Premier League" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="English" />
+    <meta name="revisit-after" content="7 days" />
+
+    <!-- Canonical URL -->
+    <link
+      rel="canonical"
+      href="{% block canonical %}https://sepl.live{{ request.path }}{% endblock %}"
+    />
+
+    <!-- Open Graph / Facebook Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sepl.live{{ request.path }}" />
+    <meta
+      property="og:title"
+      content="{% block og_title %}SEPL - Satpuda Engineering Premier League{% endblock %}"
+    />
+    <meta
+      property="og:description"
+      content="{% block og_description %}Official cricket tournament management system for Satpuda Engineering Premier League. Live auctions, player stats, and team management.{% endblock %}"
+    />
+    <meta
+      property="og:image"
+      content="{% block og_image %}https://sepl.live/static/images/sepl-og-image.jpg{% endblock %}"
+    />
+    <meta
+      property="og:site_name"
+      content="SEPL - Satpuda Engineering Premier League"
+    />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://sepl.live{{ request.path }}" />
+    <meta
+      name="twitter:title"
+      content="{% block twitter_title %}SEPL - Satpuda Engineering Premier League{% endblock %}"
+    />
+    <meta
+      name="twitter:description"
+      content="{% block twitter_description %}Official cricket tournament for Satpuda Engineering College. Live auction system and player management.{% endblock %}"
+    />
+    <meta
+      name="twitter:image"
+      content="{% block twitter_image %}https://sepl.live/static/images/sepl-twitter-card.jpg{% endblock %}"
+    />
+
+    <!-- Geographic Meta Tags -->
+    <meta name="geo.region" content="IN-MP" />
+    <meta name="geo.placename" content="Balaghat, Madhya Pradesh" />
+    <meta name="geo.position" content="22.7196;75.8577" />
+    <meta name="ICBM" content="22.7196, 75.8577" />
+
+    <!-- Mobile Web App Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="SEPL" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/static/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/static/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/static/favicon-16x16.png"
+    />
+
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -15,6 +119,54 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
     />
+
+    <!-- Structured Data / Schema.org JSON-LD -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SportsOrganization",
+        "name": "Satpuda Engineering Premier League",
+        "alternateName": [
+          "SEPL",
+          "Satpuda Premier League",
+          "Satpuda College Premier League"
+        ],
+        "url": "https://sepl.live",
+        "logo": "https://sepl.live/static/images/sepl-logo.png",
+        "description": "Official cricket tournament management system for Satpuda Engineering College featuring live auctions, player registration, and team management.",
+        "sameAs": [
+          "https://www.instagram.com/sepl_official",
+          "https://www.facebook.com/sepl",
+          "https://twitter.com/sepl_official"
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Balaghat",
+          "addressRegion": "Madhya Pradesh",
+          "addressCountry": "IN"
+        },
+        "sport": "Cricket",
+        "memberOf": {
+          "@type": "EducationalOrganization",
+          "name": "Satpuda Engineering College"
+        }
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "SEPL - Satpuda Engineering Premier League",
+        "url": "https://sepl.live",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://sepl.live/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+
     <style>
       :root {
         --primary-color: #1e3a8a;
@@ -81,6 +233,7 @@
         font-size: 0.9rem;
         text-decoration: none;
         color: #e5e7eb;
+        transition: color 0.2s;
       }
       .footer-link:hover {
         color: var(--accent-color);
@@ -94,6 +247,50 @@
         font-size: 0.85rem;
       }
 
+      /* Social media icons */
+      .social-links {
+        display: flex;
+        gap: 15px;
+        margin-top: 15px;
+      }
+      .social-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: #e5e7eb;
+        font-size: 1.2rem;
+        text-decoration: none;
+        transition: all 0.3s;
+      }
+      .social-icon:hover {
+        background: var(--accent-color);
+        color: white;
+        transform: translateY(-3px);
+      }
+      .social-icon.instagram:hover {
+        background: linear-gradient(
+          45deg,
+          #f09433 0%,
+          #e6683c 25%,
+          #dc2743 50%,
+          #cc2366 75%,
+          #bc1888 100%
+        );
+      }
+      .social-icon.facebook:hover {
+        background: #1877f2;
+      }
+      .social-icon.twitter:hover {
+        background: #1da1f2;
+      }
+      .social-icon.youtube:hover {
+        background: #ff0000;
+      }
+
       /* Responsive improvements */
       @media (max-width: 768px) {
         .content-wrapper {
@@ -104,19 +301,32 @@
         .footer-link {
           text-align: center;
         }
+        .social-links {
+          justify-content: center;
+        }
       }
     </style>
     {% block extra_css %}{% endblock %}
   </head>
-  <body>
+  <body itemscope itemtype="https://schema.org/WebPage">
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="visually-hidden-focusable"
+      >Skip to main content</a
+    >
+
     <!-- HEADER / NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav
+      class="navbar navbar-expand-lg navbar-dark"
+      role="navigation"
+      aria-label="Main navigation"
+    >
       <div class="container">
         <a
           class="navbar-brand d-flex align-items-center gap-2"
           href="{% url 'home' %}"
+          aria-label="SEPL Home"
         >
-          <i class="bi bi-trophy-fill"></i>
+          <i class="bi bi-trophy-fill" aria-hidden="true"></i>
           <span>SEPL</span>
         </a>
         <button
@@ -124,6 +334,9 @@
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -133,53 +346,36 @@
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
               <a class="nav-link" href="{% url 'home' %}">
-                <i class="bi bi-house-door"></i> Home
+                <i class="bi bi-house-door" aria-hidden="true"></i> Home
               </a>
             </li>
 
             {% if user.is_authenticated %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'dashboard' %}">
-                <i class="bi bi-speedometer2"></i> Dashboard
+                <i class="bi bi-speedometer2" aria-hidden="true"></i> Dashboard
               </a>
             </li>
 
             {% if user.user_type == 'player' %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'player_dashboard' %}">
-                <i class="bi bi-person-badge"></i> Player Dashboard
+                <i class="bi bi-person-badge" aria-hidden="true"></i> Player
+                Dashboard
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{% url 'player_registration' %}">
-                <i class="bi bi-clipboard-check"></i> Player Registration
+                <i class="bi bi-clipboard-check" aria-hidden="true"></i> Player
+                Registration
               </a>
             </li>
 
             {% elif user.user_type == 'auctioneer' %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'auctioneer_dashboard' %}">
-                <i class="bi bi-hammer"></i> Auctioneer Dashboard
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'auctioneer_quick_bid' %}">
-                <i class="bi bi-lightning-charge"></i> Quick Bid
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'auctioneer_start_player' %}">
-                <i class="bi bi-person-add"></i> Start Player
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'auctioneer_complete_sale' %}">
-                <i class="bi bi-check2-circle"></i> Complete Sale
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'auctioneer_call_going' %}">
-                <i class="bi bi-megaphone"></i> Call Going
+                <i class="bi bi-hammer" aria-hidden="true"></i> Auctioneer
+                Dashboard
               </a>
             </li>
 
@@ -191,39 +387,45 @@
                 id="adminDropdown"
                 role="button"
                 data-bs-toggle="dropdown"
+                aria-expanded="false"
               >
-                <i class="bi bi-shield-lock"></i> Admin Panel
+                <i class="bi bi-shield-lock" aria-hidden="true"></i> Admin Panel
               </a>
-              <ul class="dropdown-menu">
+              <ul class="dropdown-menu" aria-labelledby="adminDropdown">
                 <li>
                   <a class="dropdown-item" href="{% url 'admin_dashboard' %}">
-                    <i class="bi bi-speedometer"></i> Admin Dashboard
+                    <i class="bi bi-speedometer" aria-hidden="true"></i> Admin
+                    Dashboard
                   </a>
                 </li>
                 <li><hr class="dropdown-divider" /></li>
                 <li>
                   <a class="dropdown-item" href="{% url 'manage_users' %}">
-                    <i class="bi bi-people-fill"></i> Manage Users
+                    <i class="bi bi-people-fill" aria-hidden="true"></i> Manage
+                    Users
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item" href="{% url 'manage_teams' %}">
-                    <i class="bi bi-people"></i> Manage Teams
+                    <i class="bi bi-people" aria-hidden="true"></i> Manage Teams
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item" href="{% url 'manage_players' %}">
-                    <i class="bi bi-person-lines-fill"></i> Manage Players
+                    <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                    Manage Players
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item" href="{% url 'manage_auction' %}">
-                    <i class="bi bi-gavel"></i> Manage Auction Sessions
+                    <i class="bi bi-gavel" aria-hidden="true"></i> Manage
+                    Auction Sessions
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item" href="{% url 'auction_control' %}">
-                    <i class="bi bi-hammer"></i> Auction Control
+                    <i class="bi bi-hammer" aria-hidden="true"></i> Auction
+                    Control
                   </a>
                 </li>
               </ul>
@@ -232,34 +434,35 @@
             {% elif user.user_type == 'team_owner' %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'owner_dashboard' %}">
-                <i class="bi bi-briefcase"></i> Owner Dashboard
+                <i class="bi bi-briefcase" aria-hidden="true"></i> Owner
+                Dashboard
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{% url 'live_auction' %}">
-                <i class="bi bi-cash-stack"></i> Live Auction
+                <i class="bi bi-cash-stack" aria-hidden="true"></i> Live Auction
               </a>
             </li>
 
             {% elif user.user_type == 'team_manager' %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'manager_dashboard' %}">
-                <i class="bi bi-clipboard-data"></i> Manager Dashboard
+                <i class="bi bi-clipboard-data" aria-hidden="true"></i> Manager
+                Dashboard
               </a>
             </li>
 
             {% elif user.user_type == 'umpire' %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'umpire_dashboard' %}">
-                <i class="bi bi-flag"></i> Umpire Dashboard
+                <i class="bi bi-flag" aria-hidden="true"></i> Umpire Dashboard
               </a>
             </li>
-            {% endif %}
-
-            {% else %}
+            {% endif %} {% else %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'player_registration' %}">
-                <i class="bi bi-clipboard-check"></i> Player Registration
+                <i class="bi bi-clipboard-check" aria-hidden="true"></i> Player
+                Registration
               </a>
             </li>
             {% endif %}
@@ -275,11 +478,15 @@
                 id="userDropdown"
                 role="button"
                 data-bs-toggle="dropdown"
+                aria-expanded="false"
               >
-                <i class="bi bi-person-circle"></i>
+                <i class="bi bi-person-circle" aria-hidden="true"></i>
                 <span>{{ user.get_full_name|default:user.username }}</span>
               </a>
-              <ul class="dropdown-menu dropdown-menu-end">
+              <ul
+                class="dropdown-menu dropdown-menu-end"
+                aria-labelledby="userDropdown"
+              >
                 <li>
                   <h6 class="dropdown-header text-muted text-uppercase">
                     Role: {{ user.user_type|default:"User" }}
@@ -288,18 +495,21 @@
                 <li><hr class="dropdown-divider" /></li>
                 <li>
                   <a class="dropdown-item" href="{% url 'dashboard' %}">
-                    <i class="bi bi-speedometer2"></i> Go to Dashboard
+                    <i class="bi bi-speedometer2" aria-hidden="true"></i> Go to
+                    Dashboard
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item" href="{% url 'edit_profile' %}">
-                    <i class="bi bi-pencil-square"></i> Edit Profile
+                    <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit
+                    Profile
                   </a>
                 </li>
                 <li><hr class="dropdown-divider" /></li>
                 <li>
                   <a class="dropdown-item" href="{% url 'logout' %}">
-                    <i class="bi bi-box-arrow-right"></i> Logout
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                    Logout
                   </a>
                 </li>
               </ul>
@@ -308,12 +518,13 @@
             {% else %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'login' %}">
-                <i class="bi bi-box-arrow-in-right"></i> Login
+                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                Login
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{% url 'register' %}">
-                <i class="bi bi-person-plus"></i> Register
+                <i class="bi bi-person-plus" aria-hidden="true"></i> Register
               </a>
             </li>
             {% endif %}
@@ -323,7 +534,7 @@
     </nav>
 
     <!-- MAIN CONTENT -->
-    <div class="container">
+    <main id="main-content" class="container" role="main">
       {% if messages %} {% for message in messages %}
       <div
         class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3"
@@ -334,138 +545,176 @@
           type="button"
           class="btn-close"
           data-bs-dismiss="alert"
+          aria-label="Close"
         ></button>
       </div>
       {% endfor %} {% endif %}
 
       <div class="content-wrapper">{% block content %}{% endblock %}</div>
-    </div>
+    </main>
 
-    <!-- FOOTER -->
-    <footer class="py-4 mt-4">
+    <!-- FOOTER WITH SOCIAL MEDIA -->
+    <footer class="py-4 mt-4" role="contentinfo">
       <div class="container">
-        <div class="row gy-3">
+        <div class="row gy-4">
+          <!-- Column 1: About SEPL -->
           <div class="col-md-4">
-            <div class="footer-title mb-2">
+            <div class="footer-title mb-3">
               Satpuda Engineering Premier League
             </div>
-            <p class="mb-1" style="font-size: 0.9rem">
-              A professional, tech-driven intra-college cricket tournament
-              management system.
+            <p class="mb-2" style="font-size: 0.9rem; line-height: 1.6">
+              A professional, tech-driven college cricket tournament
+              management system for Satpuda College of Engineering and Polytechnic, Balaghat.
             </p>
-            <p class="mb-0" style="font-size: 0.85rem">
+
+            <!-- Social Media Links -->
+            <div class="footer-title mb-2 mt-3">Follow Us</div>
+            <div class="social-links">
+              <a
+                href="https://www.instagram.com/sepll2025"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="social-icon instagram"
+                aria-label="Follow SEPL on Instagram"
+                title="Instagram - @sepll2025"
+              >
+                <i class="bi bi-instagram"></i>
+              </a>
+              <a
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="social-icon facebook"
+                aria-label="Follow SEPL on Facebook"
+                title="Facebook"
+              >
+                <i class="bi bi-facebook"></i>
+              </a>
+              <a
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="social-icon twitter"
+                aria-label="Follow SEPL on Twitter"
+                title="Twitter/X"
+              >
+                <i class="bi bi-twitter-x"></i>
+              </a>
+              <a
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="social-icon youtube"
+                aria-label="Subscribe to SEPL on YouTube"
+                title="YouTube"
+              >
+                <i class="bi bi-youtube"></i>
+              </a>
+            </div>
+
+            <p class="mb-0 mt-3" style="font-size: 0.85rem; color: #9ca3af">
               {% now "Y" %} &copy; SEPL. All rights reserved.
             </p>
           </div>
 
+          <!-- Column 2: Quick Links -->
           <div class="col-md-4">
-            <div class="footer-title mb-2">Quick Links</div>
+            <div class="footer-title mb-3">Quick Links</div>
             {% if user.is_authenticated %}
             <a href="{% url 'dashboard' %}" class="footer-link">
-              <i class="bi bi-speedometer2"></i> Dashboard
+              <i class="bi bi-speedometer2" aria-hidden="true"></i> Dashboard
             </a>
             <a href="{% url 'edit_profile' %}" class="footer-link">
-              <i class="bi bi-pencil-square"></i> Edit Profile
+              <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit
+              Profile
             </a>
 
             {% if user.user_type == 'player' %}
             <a href="{% url 'player_dashboard' %}" class="footer-link">
-              <i class="bi bi-person-badge"></i> Player Dashboard
+              <i class="bi bi-person-badge" aria-hidden="true"></i> Player
+              Dashboard
             </a>
             <a href="{% url 'player_registration' %}" class="footer-link">
-              <i class="bi bi-clipboard-check"></i> Player Registration
+              <i class="bi bi-clipboard-check" aria-hidden="true"></i> Player
+              Registration
             </a>
 
             {% elif user.user_type == 'admin' %}
             <a href="{% url 'admin_dashboard' %}" class="footer-link">
-              <i class="bi bi-speedometer"></i> Admin Dashboard
-            </a>
-            <a href="{% url 'manage_users' %}" class="footer-link">
-              <i class="bi bi-people-fill"></i> Manage Users
+              <i class="bi bi-speedometer" aria-hidden="true"></i> Admin
+              Dashboard
             </a>
             <a href="{% url 'manage_teams' %}" class="footer-link">
-              <i class="bi bi-people"></i> Manage Teams
+              <i class="bi bi-people" aria-hidden="true"></i> Manage Teams
             </a>
             <a href="{% url 'manage_players' %}" class="footer-link">
-              <i class="bi bi-person-lines-fill"></i> Manage Players
-            </a>
-            <a href="{% url 'manage_auction' %}" class="footer-link">
-              <i class="bi bi-gavel"></i> Manage Auction Sessions
-            </a>
-            <a href="{% url 'auction_control' %}" class="footer-link">
-              <i class="bi bi-hammer"></i> Auction Control
+              <i class="bi bi-person-lines-fill" aria-hidden="true"></i> Manage
+              Players
             </a>
 
             {% elif user.user_type == 'auctioneer' %}
             <a href="{% url 'auctioneer_dashboard' %}" class="footer-link">
-              <i class="bi bi-hammer"></i> Auctioneer Dashboard
-            </a>
-            <a href="{% url 'auctioneer_quick_bid' %}" class="footer-link">
-              <i class="bi bi-lightning-charge"></i> Quick Bid
-            </a>
-            <a href="{% url 'auctioneer_start_player' %}" class="footer-link">
-              <i class="bi bi-person-add"></i> Start Player
-            </a>
-            <a href="{% url 'auctioneer_complete_sale' %}" class="footer-link">
-              <i class="bi bi-check2-circle"></i> Complete Sale
-            </a>
-            <a href="{% url 'auctioneer_call_going' %}" class="footer-link">
-              <i class="bi bi-megaphone"></i> Call Going
+              <i class="bi bi-hammer" aria-hidden="true"></i> Auctioneer
+              Dashboard
             </a>
 
             {% elif user.user_type == 'team_owner' %}
             <a href="{% url 'owner_dashboard' %}" class="footer-link">
-              <i class="bi bi-briefcase"></i> Owner Dashboard
+              <i class="bi bi-briefcase" aria-hidden="true"></i> Owner Dashboard
             </a>
             <a href="{% url 'live_auction' %}" class="footer-link">
-              <i class="bi bi-cash-stack"></i> Live Auction
-            </a>
-
-            {% elif user.user_type == 'team_manager' %}
-            <a href="{% url 'manager_dashboard' %}" class="footer-link">
-              <i class="bi bi-clipboard-data"></i> Manager Dashboard
-            </a>
-
-            {% elif user.user_type == 'umpire' %}
-            <a href="{% url 'umpire_dashboard' %}" class="footer-link">
-              <i class="bi bi-flag"></i> Umpire Dashboard
+              <i class="bi bi-cash-stack" aria-hidden="true"></i> Live Auction
             </a>
             {% endif %}
 
             <a href="{% url 'logout' %}" class="footer-link">
-              <i class="bi bi-box-arrow-right"></i> Logout
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Logout
             </a>
             {% else %}
             <a href="{% url 'home' %}" class="footer-link">
-              <i class="bi bi-house-door"></i> Home
+              <i class="bi bi-house-door" aria-hidden="true"></i> Home
             </a>
             <a href="{% url 'player_registration' %}" class="footer-link">
-              <i class="bi bi-clipboard-check"></i> Player Registration
+              <i class="bi bi-clipboard-check" aria-hidden="true"></i> Player
+              Registration
             </a>
             <a href="{% url 'login' %}" class="footer-link">
-              <i class="bi bi-box-arrow-in-right"></i> Login
+              <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Login
             </a>
             <a href="{% url 'register' %}" class="footer-link">
-              <i class="bi bi-person-plus"></i> Register
+              <i class="bi bi-person-plus" aria-hidden="true"></i> Register
             </a>
             {% endif %}
           </div>
 
-          <div class="col-md-4 text-md-end">
-            <div class="footer-title mb-2">Developer</div>
+          <!-- Column 3: Developer & Tech Stack -->
+          <div class="col-md-4">
+            <div class="footer-title mb-3">Developer</div>
             <p class="mb-2 footer-credit-text">
               <span id="dev-credit" class="footer-credit-trigger text-warning">
-                --
+                Click to reveal developer
               </span>
               <span
                 id="dev-credit-text"
-                class="ms-2 d-none footer-credit-text text-warning"
+                class="d-none footer-credit-text text-warning"
               >
-                Developed &amp; Designed by <strong>Ankush Nandagouli</strong>
+                <br />Developed &amp; Designed by<br /><strong
+                  >Ankush Nandagouli</strong
+                >
               </span>
             </p>
-            <p class="mb-0" style="font-size: 0.8rem; color: #9ca3af">
-              Built with Django, Channels, Redis &amp; Bootstrap.
+            <p class="mb-2" style="font-size: 0.85rem; color: #9ca3af">
+              Built with Django, Channels, Redis, WebSockets &amp; Bootstrap.
+            </p>
+          </div>
+        </div>
+
+        <!-- Bottom Copyright Bar -->
+        <div class="row mt-4 pt-3 border-top border-secondary">
+          <div class="col-12 text-center">
+            <p class="mb-0" style="font-size: 0.85rem; color: #9ca3af">
+              Satpuda Engineering Premier League (SEPL) - Empowering college
+              cricket through technology
             </p>
           </div>
         </div>
@@ -477,7 +726,10 @@
       // Auto close navbar on mobile click outside
       document.addEventListener("click", function (event) {
         const navbar = document.querySelector(".navbar-collapse");
-        if (!event.target.closest(".navbar") && navbar.classList.contains("show")) {
+        if (
+          !event.target.closest(".navbar") &&
+          navbar.classList.contains("show")
+        ) {
           new bootstrap.Collapse(navbar).hide();
         }
       });
