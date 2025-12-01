@@ -1,4 +1,4 @@
-# auction/views.py
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -11,7 +11,7 @@ from .forms import UserRegistrationForm, PlayerRegistrationForm, TeamCreationFor
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from .utils import broadcast_bid_update, broadcast_player_update, broadcast_bidding_end
-
+import json
 
 
 
@@ -997,7 +997,11 @@ def auctioneer_complete_sale(request):
             session = AuctionSession.objects.select_for_update().filter(status='live').first()
             if not session:
                 return JsonResponse({'success': False, 'message': 'No active session'})
-            
+            if not session.current_player:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No player currently being auctioned. Please select a player first.'
+                })
             player = Player.objects.select_for_update().get(id=player_id)
             
             # CRITICAL FIX: Check if player is already sold/unsold
@@ -1177,7 +1181,164 @@ def auctioneer_team_info(request, team_id):
     except Team.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Team not found'})
     
+@login_required
+@user_passes_test(is_admin)
+def manage_banners(request):
+    """Admin page to manage tournament banners"""
     
+    if request.method == 'POST':
+        try:
+            title = request.POST.get('title')
+            position = request.POST.get('position')
+            image = request.FILES.get('image')
+            heading = request.POST.get('heading', '')
+            subheading = request.POST.get('subheading', '')
+            description = request.POST.get('description', '')
+            button_text = request.POST.get('button_text', '')
+            button_link = request.POST.get('button_link', '')
+            order = int(request.POST.get('order', 0))
+            is_active = request.POST.get('is_active') == 'on'
+            
+            banner = TournamentBanner.objects.create(
+                title=title,
+                position=position,
+                image=image,
+                heading=heading,
+                subheading=subheading,
+                description=description,
+                button_text=button_text,
+                button_link=button_link,
+                order=order,
+                is_active=is_active
+            )
+            
+            messages.success(request, f'Banner "{title}" created successfully!')
+            return redirect('manage_banners')
+            
+        except Exception as e:
+            messages.error(request, f'Error creating banner: {str(e)}')
+    
+    # Get banners by position
+    hero_banners = TournamentBanner.objects.filter(position='hero').order_by('order')
+    secondary_banners = TournamentBanner.objects.filter(position='secondary').order_by('order')
+    footer_banners = TournamentBanner.objects.filter(position='footer').order_by('order')
+    
+    context = {
+        'hero_banners': hero_banners,
+        'secondary_banners': secondary_banners,
+        'footer_banners': footer_banners,
+    }
+    return render(request, 'admin/manage_banners.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def edit_banner(request, banner_id):
+    """Edit existing banner"""
+    banner = get_object_or_404(TournamentBanner, id=banner_id)
+    
+    if request.method == 'POST':
+        try:
+            banner.title = request.POST.get('title')
+            banner.position = request.POST.get('position')
+            banner.heading = request.POST.get('heading', '')
+            banner.subheading = request.POST.get('subheading', '')
+            banner.description = request.POST.get('description', '')
+            banner.button_text = request.POST.get('button_text', '')
+            banner.button_link = request.POST.get('button_link', '')
+            banner.order = int(request.POST.get('order', 0))
+            banner.is_active = request.POST.get('is_active') == 'on'
+            
+            # Only update image if new one is uploaded
+            if request.FILES.get('image'):
+                banner.image = request.FILES.get('image')
+            
+            banner.save()
+            
+            messages.success(request, f'Banner "{banner.title}" updated successfully!')
+            return redirect('manage_banners')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating banner: {str(e)}')
+    
+    context = {
+        'banner': banner,
+    }
+    return render(request, 'admin/edit_banner.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def delete_banner(request, banner_id):
+    """Delete banner via AJAX"""
+    if request.method == 'POST':
+        try:
+            banner = get_object_or_404(TournamentBanner, id=banner_id)
+            title = banner.title
+            banner.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Banner "{title}" deleted successfully!'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@login_required
+@user_passes_test(is_admin)
+def toggle_banner(request, banner_id):
+    """Toggle banner active status via AJAX"""
+    if request.method == 'POST':
+        try:
+            banner = get_object_or_404(TournamentBanner, id=banner_id)
+            data = json.loads(request.body)
+            banner.is_active = data.get('is_active', False)
+            banner.save()
+            
+            status = 'activated' if banner.is_active else 'deactivated'
+            return JsonResponse({
+                'success': True,
+                'message': f'Banner "{banner.title}" {status}!'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@login_required
+@user_passes_test(is_admin)
+def reorder_banners(request):
+    """Reorder banners via AJAX drag-and-drop"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            banner_order = data.get('order', [])
+            
+            for index, banner_id in enumerate(banner_order):
+                TournamentBanner.objects.filter(id=banner_id).update(order=index)
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Banners reordered successfully!'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
 def robots_txt(request):
     """Serve robots.txt for search engines"""
     lines = [

@@ -3,7 +3,7 @@ from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 from .models import Team, Player, AuctionSession, TournamentBanner, TournamentContent
 from django.contrib.sitemaps import Sitemap
-from django.urls import reverse
+from django.urls import get_resolver
 
 class StaticViewSitemap(Sitemap):
     """Sitemap for static pages"""
@@ -105,3 +105,27 @@ class DashboardSitemap(Sitemap):
             return reverse('home')
 
 
+class DynamicViewSitemap(Sitemap):
+    """Auto-generate sitemap for all named GET URLs."""
+    priority = 0.7
+    changefreq = 'daily'
+
+    EXCLUDE_NAMES = [
+        'approve_player', 'reject_player', 'start_auction_session', 'end_auction_session',
+        'auctioneer_quick_bid', 'auctioneer_start_player', 'auctioneer_complete_sale',
+        'auctioneer_call_going', 'auctioneer_team_info',  # AJAX endpoints
+        'delete_user', 'suspend_user', 'unsuspend_user', 'revoke_permissions',
+        'reorder_banners', 'toggle_banner', 'delete_banner',  # Admin AJAX
+    ]
+
+    def items(self):
+        """Get all usable URL names from urlpatterns."""
+        url_names = []
+        resolver = get_resolver()
+        for pattern in resolver.url_patterns:
+            if pattern.name and pattern.name not in self.EXCLUDE_NAMES:
+                url_names.append(pattern.name)
+        return url_names
+
+    def location(self, item):
+        return reverse(item)

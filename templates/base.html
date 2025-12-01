@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Cache-Control" content="max-age=604800, public">
 
     <!-- Primary Meta Tags -->
     <title>
@@ -40,6 +41,9 @@
       property="og:title"
       content="{% block og_title %}SEPL - Satpuda Engineering Premier League{% endblock %}"
     />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
     <meta
       property="og:description"
       content="{% block og_description %}Official cricket tournament management system for Satpuda Engineering Premier League. Live auctions, player stats, and team management.{% endblock %}"
@@ -73,8 +77,8 @@
     <!-- Geographic Meta Tags -->
     <meta name="geo.region" content="IN-MP" />
     <meta name="geo.placename" content="Balaghat, Madhya Pradesh" />
-    <meta name="geo.position" content="22.7196;75.8577" />
-    <meta name="ICBM" content="22.7196, 75.8577" />
+    <meta name="geo.position" content="21.8129;80.1838" />
+    <meta name="ICBM" content="21.8129, 80.1838" />
 
     <!-- Mobile Web App Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes" />
@@ -121,6 +125,49 @@
     />
 
     <!-- Structured Data / Schema.org JSON-LD -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SportsEvent",
+        "name": "Satpuda Engineering Premier League",
+        "description": "Official cricket tournament for Satpuda Engineering College featuring live auction system",
+        "startDate": "{% now 'Y' %}-01-01",
+        "endDate": "{% now 'Y' %}-12-31",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "location": {
+          "@type": "Place",
+          "name": "Satpuda Engineering College",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Balaghat",
+            "addressRegion": "Madhya Pradesh",
+            "addressCountry": "IN"
+          }
+        },
+        "organizer": {
+          "@type": "EducationalOrganization",
+          "name": "Satpuda Engineering College",
+          "url": "https://sepl.live"
+        }
+      }
+    </script>
+
+    # 6. Add breadcrumb structured data
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "{% block breadcrumb_name %}Home{% endblock %}",
+            "item": "https://sepl.live{{ request.path }}"
+          }
+        ]
+      }
+    </script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -563,8 +610,9 @@
               Satpuda Engineering Premier League
             </div>
             <p class="mb-2" style="font-size: 0.9rem; line-height: 1.6">
-              A professional, tech-driven college cricket tournament
-              management system for Satpuda College of Engineering and Polytechnic, Balaghat.
+              A professional, tech-driven college cricket tournament management
+              system for Satpuda College of Engineering and Polytechnic,
+              Balaghat.
             </p>
 
             <!-- Social Media Links -->
@@ -624,10 +672,6 @@
             <a href="{% url 'dashboard' %}" class="footer-link">
               <i class="bi bi-speedometer2" aria-hidden="true"></i> Dashboard
             </a>
-            <a href="{% url 'edit_profile' %}" class="footer-link">
-              <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit
-              Profile
-            </a>
 
             {% if user.user_type == 'player' %}
             <a href="{% url 'player_dashboard' %}" class="footer-link">
@@ -643,6 +687,9 @@
             <a href="{% url 'admin_dashboard' %}" class="footer-link">
               <i class="bi bi-speedometer" aria-hidden="true"></i> Admin
               Dashboard
+            </a>
+            <a href="{% url 'manage_banners' %}" class="footer-link">
+              <i class="bi bi-images" aria-hidden="true"></i> Manage Banners
             </a>
             <a href="{% url 'manage_teams' %}" class="footer-link">
               <i class="bi bi-people" aria-hidden="true"></i> Manage Teams
@@ -667,6 +714,10 @@
             </a>
             {% endif %}
 
+            <a href="{% url 'edit_profile' %}" class="footer-link">
+              <i class="bi bi-pencil-square" aria-hidden="true"></i> Edit
+              Profile
+            </a>
             <a href="{% url 'logout' %}" class="footer-link">
               <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Logout
             </a>
@@ -686,7 +737,6 @@
             </a>
             {% endif %}
           </div>
-
           <!-- Column 3: Developer & Tech Stack -->
           <div class="col-md-4">
             <div class="footer-title mb-3">Developer</div>

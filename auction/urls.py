@@ -5,7 +5,8 @@ from .sitemaps import (
     TeamSitemap, 
     PlayerSitemap, 
     AuctionSessionSitemap,
-    TournamentContentSitemap
+    TournamentContentSitemap,
+    DynamicViewSitemap
 )
 from . import views
 
@@ -16,6 +17,7 @@ sitemaps = {
     'players': PlayerSitemap,
     'auctions': AuctionSessionSitemap,
     'content': TournamentContentSitemap,
+    'pages': DynamicViewSitemap,
 }
 
 urlpatterns = [
@@ -45,7 +47,7 @@ urlpatterns = [
     path('admin/auction/control/', views.auction_control, name='auction_control'),
     
     
-    # NEW: User Management URLs
+    # User Management URLs
     path('admin/users/', views.manage_users, name='manage_users'),
     path('admin/users/<int:user_id>/', views.user_detail, name='user_detail'),
     path('admin/users/<int:user_id>/suspend/', views.suspend_user, name='suspend_user'),
@@ -53,8 +55,14 @@ urlpatterns = [
     path('admin/users/<int:user_id>/delete/', views.delete_user, name='delete_user'),
     path('admin/users/<int:user_id>/revoke/', views.revoke_permissions, name='revoke_permissions'),
     
+    # Banner Management URLs
+    path('admin/banners/', views.manage_banners, name='manage_banners'),
+    path('admin/banners/<int:banner_id>/edit/', views.edit_banner, name='edit_banner'),
+    path('admin/banners/<int:banner_id>/delete/', views.delete_banner, name='delete_banner'),
+    path('admin/banners/<int:banner_id>/toggle/', views.toggle_banner, name='toggle_banner'),
+    path('admin/banners/reorder/', views.reorder_banners, name='reorder_banners'),
     
-    # NEW: Auctioneer URLs
+    # Auctioneer URLs
     path('auctioneer/dashboard/', views.auctioneer_dashboard, name='auctioneer_dashboard'),
     path('auctioneer/quick-bid/', views.auctioneer_quick_bid, name='auctioneer_quick_bid'),
     path('auctioneer/start-player/', views.auctioneer_start_player, name='auctioneer_start_player'),
