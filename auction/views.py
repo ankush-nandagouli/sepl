@@ -43,7 +43,12 @@ def home(request):
         position='secondary',
         is_active=True
     ).order_by('order')
-    
+
+    footer_banners = TournamentBanner.objects.filter(
+        position='footer',
+        is_active=True
+    ).order_by('order')
+
     # Get content sections for homepage
     content_sections = TournamentContent.objects.filter(
         is_active=True,
@@ -71,6 +76,7 @@ def home(request):
         'active_session': active_session,
         'hero_banners': hero_banners,
         'secondary_banners': secondary_banners,
+        'footer_banners': footer_banners,
         'content_sections': content_sections,
         'tournament_stats': tournament_stats,
         'social_links': social_links,
