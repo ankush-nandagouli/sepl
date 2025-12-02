@@ -180,7 +180,8 @@ STORAGES = {
 # CORS & CSRF
 # ========================================
 CORS_ALLOWED_ORIGINS = os.environ.get(
-    'CORS_ORIGINS'
+    'CORS_ORIGINS',
+    "https://sepl.live",
 ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True
