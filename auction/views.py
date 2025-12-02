@@ -406,6 +406,7 @@ def owner_dashboard(request):
         team = request.user.owned_team
     except Team.DoesNotExist:
         team = None
+        return render(request, 'owner/no_team.html')
     
     if not team:
         return render(request, 'owner/no_team.html')
@@ -1344,6 +1345,324 @@ def reorder_banners(request):
             })
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+# ============================================================================
+# PUBLIC TEAM VIEWS
+# ============================================================================
+
+def team_list(request):
+    """Public view - List all teams"""
+    teams = Team.objects.annotate(
+        player_count=Count('players'),
+        total_spent=Sum('players__current_bid')
+    ).select_related('owner').order_by('name')
+    
+    context = {
+        'teams': teams,
+        'total_teams': teams.count(),
+    }
+    return render(request, 'teams/team_list.html', context)
+
+
+def team_detail(request, team_id):
+    """Public view - Team details with players"""
+    team = get_object_or_404(Team, id=team_id)
+    
+    players = team.players.filter(status='sold').select_related('user').order_by('-current_bid')
+    
+    # Squad composition
+    squad_composition = {
+        'batsman': players.filter(category='batsman'),
+        'bowler': players.filter(category='bowler'),
+        'all_rounder': players.filter(category='all_rounder'),
+        'wicket_keeper': players.filter(category='wicket_keeper'),
+    }
+    
+    # Statistics
+    total_spent = sum(p.current_bid for p in players)
+    avg_player_cost = total_spent / players.count() if players.count() > 0 else 0
+    most_expensive = players.first() if players.exists() else None
+    
+    context = {
+        'team': team,
+        'players': players,
+        'squad_composition': squad_composition,
+        'total_spent': total_spent,
+        'avg_player_cost': avg_player_cost,
+        'most_expensive': most_expensive,
+        'purse_spent_percentage': (total_spent / team.total_purse * 100) if team.total_purse else 0,
+    }
+    return render(request, 'teams/team_detail.html', context)
+
+
+# ============================================================================
+# TEAM OWNER VIEWS
+# ============================================================================
+
+@login_required
+@user_passes_test(is_team_owner)
+def my_team(request):
+    """Team owner's team management page"""
+    try:
+        team = request.user.owned_team
+    except Team.DoesNotExist:
+        return render(request, 'owner/no_team.html')
+    
+    players = team.players.filter(status='sold').select_related('user').order_by('-current_bid')
+    
+    # Detailed squad analysis
+    squad_stats = {
+        'batsman': {
+            'count': players.filter(category='batsman').count(),
+            'players': players.filter(category='batsman'),
+            'spent': sum(p.current_bid for p in players.filter(category='batsman'))
+        },
+        'bowler': {
+            'count': players.filter(category='bowler').count(),
+            'players': players.filter(category='bowler'),
+            'spent': sum(p.current_bid for p in players.filter(category='bowler'))
+        },
+        'all_rounder': {
+            'count': players.filter(category='all_rounder').count(),
+            'players': players.filter(category='all_rounder'),
+            'spent': sum(p.current_bid for p in players.filter(category='all_rounder'))
+        },
+        'wicket_keeper': {
+            'count': players.filter(category='wicket_keeper').count(),
+            'players': players.filter(category='wicket_keeper'),
+            'spent': sum(p.current_bid for p in players.filter(category='wicket_keeper'))
+        },
+    }
+    
+    # Recent auction activity
+    recent_bids = Bid.objects.filter(team=team).select_related('player__user').order_by('-timestamp')[:10]
+    
+    # Auction logs for this team
+    auction_wins = AuctionLog.objects.filter(
+        winning_team=team,
+        sold=True
+    ).select_related('player__user').order_by('-timestamp')
+    
+    context = {
+        'team': team,
+        'players': players,
+        'squad_stats': squad_stats,
+        'recent_bids': recent_bids,
+        'auction_wins': auction_wins,
+        'total_spent': team.purse_spent(),
+        'purse_percentage': (team.purse_remaining / team.total_purse * 100) if team.total_purse else 0,
+    }
+    return render(request, 'owner/my_team.html', context)
+
+
+@login_required
+@user_passes_test(is_team_owner)
+def player_profile(request, player_id):
+    """Detailed player profile view for team owner"""
+    player = get_object_or_404(Player, id=player_id)
+    
+    # Check if this player belongs to the owner's team
+    try:
+        team = request.user.owned_team
+        if player.team != team:
+            messages.warning(request, 'This player is not in your team!')
+            return redirect('my_team')
+    except Team.DoesNotExist:
+        return redirect('owner_dashboard')
+    
+    # Player's bidding history
+    bid_history = Bid.objects.filter(player=player).select_related('team').order_by('-timestamp')
+    
+    context = {
+        'player': player,
+        'bid_history': bid_history,
+        'team': team,
+    }
+    return render(request, 'owner/player_profile.html', context)
+
+
+# ============================================================================
+# ADMIN TEAM MANAGEMENT VIEWS
+# ============================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def admin_team_overview(request):
+    """Admin view - Comprehensive team management"""
+    teams = Team.objects.annotate(
+        player_count=Count('players'),
+        total_spent=Sum('players__current_bid')
+    ).select_related('owner', 'manager').order_by('name')
+    
+    # Overall statistics
+    total_purse_distributed = sum(t.total_purse for t in teams)
+    total_purse_spent = sum(t.purse_spent() for t in teams)
+    total_players_sold = Player.objects.filter(status='sold').count()
+    
+    # Team with most/least spending
+    team_spending = [(t, t.purse_spent()) for t in teams]
+    most_spending_team = max(team_spending, key=lambda x: x[1]) if team_spending else (None, 0)
+    least_spending_team = min(team_spending, key=lambda x: x[1]) if team_spending else (None, 0)
+    
+    context = {
+        'teams': teams,
+        'total_teams': teams.count(),
+        'total_purse_distributed': total_purse_distributed,
+        'total_purse_spent': total_purse_spent,
+        'total_players_sold': total_players_sold,
+        'most_spending_team': most_spending_team,
+        'least_spending_team': least_spending_team,
+    }
+    return render(request, 'admin/team_overview.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_team_detail(request, team_id):
+    """Admin view - Detailed team management"""
+    team = get_object_or_404(Team, id=team_id)
+    
+    players = team.players.filter(status='sold').select_related('user').order_by('-current_bid')
+    
+    # Squad composition
+    squad_composition = {
+        'batsman': players.filter(category='batsman'),
+        'bowler': players.filter(category='bowler'),
+        'all_rounder': players.filter(category='all_rounder'),
+        'wicket_keeper': players.filter(category='wicket_keeper'),
+    }
+    
+    # Auction activity
+    all_bids = Bid.objects.filter(team=team).select_related('player__user').order_by('-timestamp')[:20]
+    auction_wins = AuctionLog.objects.filter(winning_team=team, sold=True).select_related('player__user')
+    
+    # Team finances
+    total_spent = team.purse_spent()
+    avg_player_cost = total_spent / players.count() if players.count() > 0 else 0
+    
+    context = {
+        'team': team,
+        'players': players,
+        'squad_composition': squad_composition,
+        'all_bids': all_bids,
+        'auction_wins': auction_wins,
+        'total_spent': total_spent,
+        'avg_player_cost': avg_player_cost,
+    }
+    return render(request, 'admin/team_detail.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_edit_team(request, team_id):
+    """Admin edit team details"""
+    team = get_object_or_404(Team, id=team_id)
+    
+    if request.method == 'POST':
+        team.name = request.POST.get('name')
+        team.total_purse = int(request.POST.get('total_purse', team.total_purse))
+        team.max_players = int(request.POST.get('max_players', team.max_players))
+        
+        # Update owner if changed
+        owner_id = request.POST.get('owner')
+        if owner_id:
+            new_owner = User.objects.get(id=owner_id, user_type='team_owner')
+            team.owner = new_owner
+        
+        # Update manager if provided
+        manager_id = request.POST.get('manager')
+        if manager_id:
+            team.manager = User.objects.get(id=manager_id, user_type='team_manager')
+        else:
+            team.manager = None
+        
+        # Update logo if provided
+        if request.FILES.get('logo'):
+            team.logo = request.FILES.get('logo')
+        
+        team.save()
+        messages.success(request, f'Team "{team.name}" updated successfully!')
+        return redirect('admin_team_detail', team_id=team.id)
+    
+    # Get available owners and managers
+    available_owners = User.objects.filter(user_type='team_owner')
+    available_managers = User.objects.filter(user_type='team_manager')
+    
+    context = {
+        'team': team,
+        'available_owners': available_owners,
+        'available_managers': available_managers,
+    }
+    return render(request, 'admin/edit_team.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_delete_team(request, team_id):
+    """Admin delete team (with confirmation)"""
+    if request.method == 'POST':
+        team = get_object_or_404(Team, id=team_id)
+        team_name = team.name
+        
+        # Reset all players from this team
+        team.players.all().update(team=None, status='approved', current_bid=0)
+        
+        # Delete team
+        team.delete()
+        
+        messages.success(request, f'Team "{team_name}" deleted successfully! All players have been reset.')
+        return redirect('admin_team_overview')
+    
+    return redirect('admin_team_overview')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_reset_team(request, team_id):
+    """Reset team - remove all players and reset purse"""
+    if request.method == 'POST':
+        team = get_object_or_404(Team, id=team_id)
+        
+        # Reset all players
+        players = team.players.all()
+        player_count = players.count()
+        players.update(team=None, status='approved', current_bid=0)
+        
+        # Reset purse
+        team.purse_remaining = team.total_purse
+        team.save()
+        
+        messages.success(request, f'Team "{team.name}" reset! {player_count} players released and purse restored to ₹{team.total_purse}.')
+        return redirect('admin_team_detail', team_id=team.id)
+    
+    return redirect('admin_team_overview')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_remove_player_from_team(request, team_id, player_id):
+    """Remove a specific player from a team"""
+    if request.method == 'POST':
+        team = get_object_or_404(Team, id=team_id)
+        player = get_object_or_404(Player, id=player_id, team=team)
+        
+        # Refund the amount to team
+        team.purse_remaining += player.current_bid
+        team.save()
+        
+        # Reset player
+        player_name = player.user.get_full_name()
+        refund_amount = player.current_bid
+        player.team = None
+        player.status = 'approved'
+        player.current_bid = 0
+        player.save()
+        
+        messages.success(request, f'Player "{player_name}" removed from "{team.name}". ₹{refund_amount} refunded to team purse.')
+        return redirect('admin_team_detail', team_id=team.id)
+    
+    return redirect('admin_team_overview')
 
 def robots_txt(request):
     """Serve robots.txt for search engines"""

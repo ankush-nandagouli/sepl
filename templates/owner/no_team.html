@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}No Team Assigned{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 text-center">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-shield-exclamation text-warning" style="font-size: 5rem;"></i>
+                    </div>
+                    
+                    <h1 class="display-5 mb-3">No Team Assigned</h1>
+                    
+                    <p class="lead text-muted mb-4">
+                        You're registered as a <strong>Team Owner</strong>, but you haven't been assigned a team yet.
+                    </p>
+
+                    <div class="alert alert-info text-start">
+                        <h5 class="alert-heading">
+                            <i class="bi bi-info-circle"></i> What's Next?
+                        </h5>
+                        <hr>
+                        <ul class="mb-0">
+                            <li class="mb-2">
+                                <strong>Contact Admin:</strong> Reach out to the tournament administrator to get a team assigned to you.
+                            </li>
+                            <li class="mb-2">
+                                <strong>Wait for Assignment:</strong> The admin will create a team and assign you as the owner.
+                            </li>
+                            <li>
+                                <strong>Check Back:</strong> Once assigned, you'll be able to access your team dashboard and participate in the auction.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-speedometer2"></i> Go to Dashboard
+                        </a>
+                        <a href="{% url 'team_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-shield-fill"></i> View All Teams
+                        </a>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="text-muted small">
+                        <p class="mb-2"><strong>Your Account Details:</strong></p>
+                        <p class="mb-1">
+                            <i class="bi bi-person-circle"></i> {{ user.get_full_name }}
+                        </p>
+                        <p class="mb-1">
+                            <i class="bi bi-envelope"></i> {{ user.email }}
+                        </p>
+                        <p class="mb-0">
+                            <i class="bi bi-tag"></i> Role: Team Owner
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Information Cards -->
+            <div class="row mt-4 g-3">
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-people-fill text-primary" style="font-size: 2rem;"></i>
+                            <h5 class="mt-2">Team Ownership</h5>
+                            <p class="text-muted small mb-0">
+                                As a team owner, you'll manage your squad, participate in auctions, and lead your team to victory!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-hammer text-success" style="font-size: 2rem;"></i>
+                            <h5 class="mt-2">Auction Access</h5>
+                            <p class="text-muted small mb-0">
+                                Once assigned, you'll get full access to live auctions where you can bid for players!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+</style>
+{% endblock %}

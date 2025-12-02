@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ team.name }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5">
+                <i class="bi bi-pencil-square text-warning"></i> Edit Team
+            </h1>
+            <p class="text-muted">Modify team details and configuration</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0">
+                        <i class="bi bi-shield-fill"></i> {{ team.name }}
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Team Name -->
+                        <div class="mb-4">
+                            <label for="name" class="form-label">
+                                <i class="bi bi-tag"></i> Team Name *
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="name" 
+                                   name="name" 
+                                   value="{{ team.name }}" 
+                                   required>
+                            <small class="form-text text-muted">This will be displayed publicly</small>
+                        </div>
+
+                        <!-- Team Logo -->
+                        <div class="mb-4">
+                            <label for="logo" class="form-label">
+                                <i class="bi bi-image"></i> Team Logo
+                            </label>
+                            
+                            {% if team.logo %}
+                            <div class="mb-3">
+                                <p class="text-muted mb-2">Current Logo:</p>
+                                <img src="{{ team.logo.url }}" 
+                                     alt="{{ team.name }}" 
+                                     class="rounded" 
+                                     style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                            </div>
+                            {% endif %}
+                            
+                            <input type="file" 
+                                   class="form-control" 
+                                   id="logo" 
+                                   name="logo" 
+                                   accept="image/*">
+                            <small class="form-text text-muted">
+                                Upload a new logo to replace the current one (PNG, JPG, max 5MB)
+                            </small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Owner Selection -->
+                        <div class="mb-4">
+                            <label for="owner" class="form-label">
+                                <i class="bi bi-person-circle"></i> Team Owner *
+                            </label>
+                            <select class="form-select form-select-lg" id="owner" name="owner" required>
+                                {% for owner in available_owners %}
+                                <option value="{{ owner.id }}" {% if owner.id == team.owner.id %}selected{% endif %}>
+                                    {{ owner.get_full_name }} ({{ owner.email }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">
+                                Current: <strong>{{ team.owner.get_full_name }}</strong>
+                            </small>
+                        </div>
+
+                        <!-- Manager Selection -->
+                        <div class="mb-4">
+                            <label for="manager" class="form-label">
+                                <i class="bi bi-clipboard-check"></i> Team Manager (Optional)
+                            </label>
+                            <select class="form-select" id="manager" name="manager">
+                                <option value="">-- No Manager --</option>
+                                {% for manager in available_managers %}
+                                <option value="{{ manager.id }}" {% if team.manager and manager.id == team.manager.id %}selected{% endif %}>
+                                    {{ manager.get_full_name }} ({{ manager.email }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Financial Settings -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="total_purse" class="form-label">
+                                    <i class="bi bi-wallet2"></i> Total Purse (₹) *
+                                </label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="total_purse" 
+                                       name="total_purse" 
+                                       value="{{ team.total_purse }}" 
+                                       min="5000" 
+                                       max="50000" 
+                                       step="100"
+                                       required>
+                                <small class="form-text text-muted">
+                                    Current: ₹{{ team.total_purse }}
+                                </small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="max_players" class="form-label">
+                                    <i class="bi bi-people"></i> Maximum Players *
+                                </label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="max_players" 
+                                       name="max_players" 
+                                       value="{{ team.max_players }}" 
+                                       min="{{ team.players.count }}" 
+                                       max="25"
+                                       required>
+                                <small class="form-text text-muted">
+                                    Current: {{ team.max_players }} ({{ team.players.count }} bought)
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Current Team Stats (Read-only) -->
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Current Team Status</h5>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Players Bought:</strong></p>
+                                    <h4 class="text-primary">{{ team.players.count }}</h4>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Purse Spent:</strong></p>
+                                    <h4 class="text-danger">₹{{ team.purse_spent }}</h4>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Purse Remaining:</strong></p>
+                                    <h4 class="text-success">₹{{ team.purse_remaining }}</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Warning Messages -->
+                        {% if team.players.count > 0 %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Warning:</strong> Changing the total purse will not affect players already bought. 
+                            To reset the team and refund the purse, use the "Reset Team" option instead.
+                        </div>
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                            <a href="{% url 'admin_team_detail' team.id %}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-check-circle"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card shadow-sm border-danger mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-octagon"></i> Danger Zone</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <h6>Reset Team</h6>
+                            <p class="text-muted small mb-2">
+                                Remove all players and restore full purse. Team will remain active.
+                            </p>
+                            <button type="button" 
+                                    class="btn btn-warning btn-sm" 
+                                    onclick="resetTeam()">
+                                <i class="bi bi-arrow-clockwise"></i> Reset Team
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Delete Team</h6>
+                            <p class="text-muted small mb-2">
+                                Permanently delete this team. All players will be released. This action cannot be undone!
+                            </p>
+                            <button type="button" 
+                                    class="btn btn-danger btn-sm" 
+                                    onclick="deleteTeam()">
+                                <i class="bi bi-trash"></i> Delete Team
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Confirmation Modal -->
+<div class="modal fade" id="resetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-arrow-clockwise"></i> Confirm Reset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset <strong>{{ team.name }}</strong>?</p>
+                <p><strong>This will:</strong></p>
+                <ul>
+                    <li>Release all {{ team.players.count }} players</li>
+                    <li>Restore purse to ₹{{ team.total_purse }}</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{% url 'admin_reset_team' team.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-arrow-clockwise"></i> Yes, Reset
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirm Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to permanently delete <strong>{{ team.name }}</strong>?</p>
+                <p class="text-danger"><strong>Warning:</strong> This action cannot be undone!</p>
+                <p><strong>This will:</strong></p>
+                <ul>
+                    <li>Delete the team permanently</li>
+                    <li>Release all players to available pool</li>
+                    <li>Remove team owner association</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{% url 'admin_delete_team' team.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Yes, Delete Permanently
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function resetTeam() {
+    new bootstrap.Modal(document.getElementById('resetModal')).show();
+}
+
+function deleteTeam() {
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

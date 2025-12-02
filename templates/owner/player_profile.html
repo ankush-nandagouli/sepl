@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Player Profile - {{ player.full_name }} | SEPL{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- PAGE HEADER -->
+  <div class="text-center mb-4">
+    <h2 class="fw-bold">
+      <i class="bi bi-person-badge-fill" style="color: var(--primary-color)"></i>
+      {{ player.full_name }}
+    </h2>
+    <p class="text-muted mb-1">Role: <strong>{{ player.role }}</strong></p>
+    <p class="text-muted mb-1">Batting Style: <strong>{{ player.batting_style }}</strong></p>
+    <p class="text-muted">Bowling Style: <strong>{{ player.bowling_style }}</strong></p>
+  </div>
+
+  <!-- PLAYER CARD -->
+  <div class="row justify-content-center mb-4">
+    <div class="col-md-5">
+      <div class="card p-3 text-center">
+        <img
+          src="{{ player.image.url }}"
+          class="img-fluid rounded"
+          style="height: 300px; object-fit: cover;"
+          alt="{{ player.full_name }}"
+        />
+        <h4 class="fw-bold mt-3">{{ player.full_name }}</h4>
+        <p class="text-muted mb-2">Team: <strong>{{ team.team_name }}</strong></p>
+        <h5 class="text-success fw-bold">
+          <i class="bi bi-cash-stack"></i> Bought Price:
+          ₹{{ player.sold_price|default:"—" }}
+        </h5>
+      </div>
+    </div>
+  </div>
+
+  <!-- BID HISTORY TABLE -->
+  <div class="card mt-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">
+        <i class="bi bi-clock-history"></i> Bidding History
+      </h5>
+    </div>
+    <div class="card-body">
+      {% if bid_history %}
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>Team</th>
+              <th>Bid Amount</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for bid in bid_history %}
+            <tr>
+              <td><strong>{{ bid.team.team_name }}</strong></td>
+              <td class="text-success fw-bold">₹{{ bid.amount }}</td>
+              <td>{{ bid.timestamp|date:"d M Y, h:i A" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-center text-muted">No bidding history available.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- BACK BUTTON -->
+  <div class="text-center mt-4">
+    <a href="{% url 'my_team' %}" class="btn btn-primary">
+      <i class="bi bi-arrow-left"></i> Back to My Team
+    </a>
+  </div>
+</div>
+{% endblock %}

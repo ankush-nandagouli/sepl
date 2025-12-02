@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Team Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5">
+                <i class="bi bi-shield-fill text-primary"></i> Team Management
+            </h1>
+            <p class="text-muted">Comprehensive team overview and management</p>
+        </div>
+    </div>
+
+    <!-- Overall Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center shadow-sm h-100 border-primary">
+                <div class="card-body">
+                    <i class="bi bi-shield-check text-primary" style="font-size: 2.5rem;"></i>
+                    <h2 class="mt-2">{{ total_teams }}</h2>
+                    <p class="text-muted mb-0">Total Teams</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center shadow-sm h-100 border-success">
+                <div class="card-body">
+                    <i class="bi bi-cash-stack text-success" style="font-size: 2.5rem;"></i>
+                    <h2 class="mt-2">₹{{ total_purse_distributed }}</h2>
+                    <p class="text-muted mb-0">Total Purse</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center shadow-sm h-100 border-danger">
+                <div class="card-body">
+                    <i class="bi bi-graph-up text-danger" style="font-size: 2.5rem;"></i>
+                    <h2 class="mt-2">₹{{ total_purse_spent }}</h2>
+                    <p class="text-muted mb-0">Total Spent</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center shadow-sm h-100 border-info">
+                <div class="card-body">
+                    <i class="bi bi-people-fill text-info" style="font-size: 2.5rem;"></i>
+                    <h2 class="mt-2">{{ total_players_sold }}</h2>
+                    <p class="text-muted mb-0">Players Sold</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Spending Teams -->
+    {% if most_spending_team.0 and least_spending_team.0 %}
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-trophy-fill"></i> Highest Spender</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h3>{{ most_spending_team.0.name }}</h3>
+                    <h2 class="text-success">₹{{ most_spending_team.1 }}</h2>
+                    <p class="text-muted">{{ most_spending_team.0.players.count }} players bought</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-piggy-bank-fill"></i> Most Conservative</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h3>{{ least_spending_team.0.name }}</h3>
+                    <h2 class="text-info">₹{{ least_spending_team.1 }}</h2>
+                    <p class="text-muted">{{ least_spending_team.0.players.count }} players bought</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Teams Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-table"></i> All Teams</h4>
+                    <a href="{% url 'manage_teams' %}" class="btn btn-light btn-sm">
+                        <i class="bi bi-plus-circle"></i> Add New Team
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Logo</th>
+                                    <th>Team Name</th>
+                                    <th>Owner</th>
+                                    <th>Manager</th>
+                                    <th>Players</th>
+                                    <th>Spent</th>
+                                    <th>Remaining</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for team in teams %}
+                                <tr>
+                                    <td>
+                                        {% if team.logo %}
+                                        <img src="{{ team.logo.url }}" alt="{{ team.name }}" 
+                                             class="rounded-circle" 
+                                             style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                             style="width: 40px; height: 40px;">
+                                            <i class="bi bi-shield text-white"></i>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>{{ team.name }}</strong></td>
+                                    <td>{{ team.owner.get_full_name }}</td>
+                                    <td>{{ team.manager.get_full_name|default:"—" }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ team.player_count }}/{{ team.max_players }}</span>
+                                    </td>
+                                    <td><span class="badge bg-danger">₹{{ team.total_spent|default:0 }}</span></td>
+                                    <td><span class="badge bg-success">₹{{ team.purse_remaining }}</span></td>
+                                    <td>
+                                        {% if team.player_count >= team.max_players %}
+                                        <span class="badge bg-warning">Full</span>
+                                        {% elif team.purse_remaining < 300 %}
+                                        <span class="badge bg-info">Low Purse</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'admin_team_detail' team.id %}" 
+                                               class="btn btn-info" title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'admin_edit_team' team.id %}" 
+                                               class="btn btn-warning" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-secondary" 
+                                                    onclick="resetTeam({{ team.id }}, '{{ team.name }}')"
+                                                    title="Reset Team">
+                                                <i class="bi bi-arrow-clockwise"></i>
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn btn-danger" 
+                                                    onclick="deleteTeam({{ team.id }}, '{{ team.name }}')"
+                                                    title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-4">
+                                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                                        <p class="text-muted mt-2">No teams created yet</p>
+                                        <a href="{% url 'manage_teams' %}" class="btn btn-primary">
+                                            <i class="bi bi-plus-circle"></i> Create First Team
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirm Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete team <strong id="deleteTeamName"></strong>?</p>
+                <p class="text-danger"><strong>Warning:</strong> All players will be reset and returned to the available pool!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" id="deleteForm" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Yes, Delete Team
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Confirmation Modal -->
+<div class="modal fade" id="resetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-arrow-clockwise"></i> Confirm Reset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset team <strong id="resetTeamName"></strong>?</p>
+                <p><strong>This will:</strong></p>
+                <ul>
+                    <li>Release all players back to available pool</li>
+                    <li>Restore full team purse</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" id="resetForm" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-arrow-clockwise"></i> Yes, Reset Team
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteTeam(teamId, teamName) {
+    document.getElementById('deleteTeamName').textContent = teamName;
+    document.getElementById('deleteForm').action = `/admin/teams/${teamId}/delete/`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function resetTeam(teamId, teamName) {
+    document.getElementById('resetTeamName').textContent = teamName;
+    document.getElementById('resetForm').action = `/admin/teams/${teamId}/reset/`;
+    new bootstrap.Modal(document.getElementById('resetModal')).show();
+}
+</script>
+
+<style>
+.table-responsive {
+    max-height: 600px;
+}
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+}
+</style>
+{% endblock %}

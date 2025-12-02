@@ -26,6 +26,9 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
+   
+    path('teams/', views.team_list, name='team_list'),
+    path('teams/<int:team_id>/', views.team_detail, name='team_detail'),
     
     # Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -73,6 +76,18 @@ urlpatterns = [
     # Team Owner URLs
     path('owner/dashboard/', views.owner_dashboard, name='owner_dashboard'),
     path('owner/auction/', views.live_auction, name='live_auction'),
+    path('owner/my-team/', views.my_team, name='my_team'),
+    path('owner/player/<int:player_id>/', views.player_profile, name='player_profile'),
+    
+    # ========================================
+    # ADMIN TEAM MANAGEMENT
+    # ========================================
+    path('admin/teams/overview/', views.admin_team_overview, name='admin_team_overview'),
+    path('admin/teams/<int:team_id>/detail/', views.admin_team_detail, name='admin_team_detail'),
+    path('admin/teams/<int:team_id>/edit/', views.admin_edit_team, name='admin_edit_team'),
+    path('admin/teams/<int:team_id>/delete/', views.admin_delete_team, name='admin_delete_team'),
+    path('admin/teams/<int:team_id>/reset/', views.admin_reset_team, name='admin_reset_team'),
+    path('admin/teams/<int:team_id>/remove-player/<int:player_id>/', views.admin_remove_player_from_team, name='admin_remove_player_from_team'),
     
     # Team Manager URLs
     path('manager/dashboard/', views.manager_dashboard, name='manager_dashboard'),

@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Teams - SEPL{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 text-center mb-3">
+                <i class="bi bi-shield-fill text-primary"></i>
+                SEPL Teams
+            </h1>
+            <p class="text-center text-muted">
+                {{ total_teams }} teams competing for the championship
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for team in teams %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-header bg-gradient text-white text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    {% if team.logo %}
+                    <img src="{{ team.logo.url }}" alt="{{ team.name }} Logo" class="rounded-circle mb-2" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid white;">
+                    {% else %}
+                    <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 80px; height: 80px;">
+                        <i class="bi bi-shield-fill text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    {% endif %}
+                    <h4 class="mb-0">{{ team.name }}</h4>
+                </div>
+                
+                <div class="card-body">
+                    <div class="mb-3">
+                        <p class="mb-2">
+                            <i class="bi bi-person-circle text-primary"></i>
+                            <strong>Owner:</strong> {{ team.owner.get_full_name }}
+                        </p>
+                        {% if team.manager %}
+                        <p class="mb-2">
+                            <i class="bi bi-clipboard-check text-success"></i>
+                            <strong>Manager:</strong> {{ team.manager.get_full_name }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <h3 class="text-primary mb-0">{{ team.player_count }}</h3>
+                                <small class="text-muted">Players</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <h3 class="text-success mb-0">₹{{ team.total_spent|default:0 }}</h3>
+                                <small class="text-muted">Spent</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="progress mb-3" style="height: 25px;">
+                        {% widthratio team.purse_remaining team.total_purse 100 as purse_percentage %}
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ purse_percentage }}%;" 
+                             aria-valuenow="{{ purse_percentage }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            ₹{{ team.purse_remaining }} left
+                        </div>
+                    </div>
+
+                    <p class="text-muted small mb-3">
+                        <i class="bi bi-wallet2"></i> 
+                        Total Purse: ₹{{ team.total_purse }}
+                    </p>
+                </div>
+
+                <div class="card-footer bg-light text-center">
+                    <a href="{% url 'team_detail' team.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-eye"></i> View Team Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle"></i>
+                No teams registered yet.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.hover-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+}
+.stat-box {
+    padding: 10px;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+.progress-bar {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
