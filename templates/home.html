@@ -156,46 +156,61 @@
     }
 }
 
-    /* Footer 3D Infinite Carousel */
-.footer-carousel-container {
-    perspective: 1200px;
-    height: 200px;
+/* Rotating Circle Carousel */
+.circle-carousel-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 50px 0;
-}
-
-.footer-carousel {
-    width: 400px;
-    height: 200px;
+    height: 350px;
     position: relative;
-    transform-style: preserve-3d;
-    animation: rotate 18s linear infinite;
+    margin-bottom: 60px;
 }
 
-.carousel-item-3d {
+.circle-carousel {
+    width: 420px;
+    height: 420px;
+    position: relative;
+    border-radius: 50%;
+    animation: circleRotate 20s linear infinite;
+    transform-style: preserve-3d;
+}
+
+.circle-item {
+    width: 140px;
+    height: 90px;
     position: absolute;
-    width: 350px;
-    height: 180px;
-    left: 25px;
-    top: 10px;
+    left: 50%;
+    top: 50%;
     transform-style: preserve-3d;
 }
 
-.carousel-item-3d img {
+.circle-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0,0,0,.4);
-    border: 3px solid white;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    background: white;
+    border: 3px solid #ffffff;
 }
 
-@keyframes rotate {
-    from { transform: rotateY(0deg); }
-    to { transform: rotateY(-360deg); }
+@keyframes circleRotate {
+    from { transform: rotateZ(0deg); }
+    to { transform: rotateZ(360deg); }
 }
+
+/* Mobile Responsive */
+@media (max-width: 576px) {
+    .circle-carousel {
+        width: 300px;
+        height: 300px;
+    }
+    .circle-item {
+        width: 110px;
+        height: 70px;
+    }
+}
+
 
 </style>
 {% endblock %}
@@ -406,17 +421,20 @@
 </div>
 
 {% if footer_banners %}
-<div class="footer-carousel-container">
-    <div class="footer-carousel">
+<h3 class="text-center fw-bold mt-5 mb-4">
+    🌟 Teams 🌟
+</h3>
+
+<div class="circle-carousel-container">
+    <div class="circle-carousel">
         {% for banner in footer_banners %}
-        <div class="carousel-item-3d">
-            <img src="{{ banner.image.url }}" alt="footer banner">
+        <div class="circle-item">
+            <img src="{{ banner.image.url }}" alt="Sponsor">
         </div>
         {% endfor %}
     </div>
 </div>
 {% endif %}
-
 {% endblock %}
 
 {% block extra_js %}
@@ -437,13 +455,17 @@
         sessionStorage.setItem("promo_shown", "true");
     }
 });
-    document.addEventListener("DOMContentLoaded", () => {
-    const items = document.querySelectorAll(".carousel-item-3d");
-    const angle = 360 / items.length;
+document.addEventListener("DOMContentLoaded", () => {
+    const items = document.querySelectorAll(".circle-item");
+    const angleStep = 360 / items.length;
 
     items.forEach((item, index) => {
-        const rotation = angle * index;
-        item.style.transform = `rotateY(${rotation}deg) translateZ(420px)`;
+        const angle = angleStep * index;
+        const radius = 160;  // Distance from center
+        const x = radius * Math.cos(angle * Math.PI / 180);
+        const y = radius * Math.sin(angle * Math.PI / 180);
+
+        item.style.transform = `translate(${x}px, ${y}px)`;
     });
 });
 </script>
