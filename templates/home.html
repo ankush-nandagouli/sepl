@@ -155,6 +155,48 @@
         padding: 12px 18px;
     }
 }
+
+    /* Footer 3D Infinite Carousel */
+.footer-carousel-container {
+    perspective: 1200px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 50px 0;
+}
+
+.footer-carousel {
+    width: 400px;
+    height: 200px;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: rotate 18s linear infinite;
+}
+
+.carousel-item-3d {
+    position: absolute;
+    width: 350px;
+    height: 180px;
+    left: 25px;
+    top: 10px;
+    transform-style: preserve-3d;
+}
+
+.carousel-item-3d img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,.4);
+    border: 3px solid white;
+}
+
+@keyframes rotate {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(-360deg); }
+}
+
 </style>
 {% endblock %}
 
@@ -363,6 +405,18 @@
     </div>
 </div>
 
+{% if footer_banners %}
+<div class="footer-carousel-container">
+    <div class="footer-carousel">
+        {% for banner in footer_banners %}
+        <div class="carousel-item-3d">
+            <img src="{{ banner.image.url }}" alt="footer banner">
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}
 
 {% block extra_js %}
@@ -382,6 +436,15 @@
         modal.show();
         sessionStorage.setItem("promo_shown", "true");
     }
+});
+    document.addEventListener("DOMContentLoaded", () => {
+    const items = document.querySelectorAll(".carousel-item-3d");
+    const angle = 360 / items.length;
+
+    items.forEach((item, index) => {
+        const rotation = angle * index;
+        item.style.transform = `rotateY(${rotation}deg) translateZ(420px)`;
+    });
 });
 </script>
 {% endblock %}
