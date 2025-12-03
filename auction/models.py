@@ -93,7 +93,6 @@ class Team(models.Model):
     purse_remaining = models.IntegerField(default=10000)
     total_purse = models.IntegerField(default=10000)
     max_players = models.IntegerField(default=16)
-    iconic_players_count = models.IntegerField(default=0, help_text="Number of iconic players (reduces squad size)")
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -105,29 +104,14 @@ class Team(models.Model):
     def purse_spent(self):
         return self.total_purse - self.purse_remaining
     
-    def effective_max_players(self):
-        """Get effective squad size after iconic players"""
-        return self.max_players - self.iconic_players_count
-    
     def can_buy_player(self):
-        """Check if team can buy more players (excluding iconic players)"""
-        regular_players = self.players.filter(is_iconic=False).count()
-        return regular_players < self.effective_max_players()
+        """Check if team can buy more players"""
+        return self.players.count() < self.max_players
     
     def slots_remaining(self):
-        """Get remaining player slots (excluding iconic players)"""
-        regular_players = self.players.filter(is_iconic=False).count()
-        return self.effective_max_players() - regular_players
-    
-    def total_players_count(self):
-        """Total players including iconic"""
-        return self.players.count()
-    
-    def regular_players_count(self):
-        """Regular players only"""
-        return self.players.filter(is_iconic=False).count()
+        """Get remaining player slots"""
+        return self.max_players - self.players.count()
 
-    
 class PaddleRaise(models.Model):
     """Track when team owners raise their paddle during auction"""
     auction_session = models.ForeignKey('AuctionSession', on_delete=models.CASCADE, related_name='paddle_raises')
@@ -174,24 +158,11 @@ class Player(models.Model):
     batting_style = models.CharField(max_length=50, blank=True)
     bowling_style = models.CharField(max_length=50, blank=True)
     previous_team = models.CharField(max_length=100, blank=True)
-    is_iconic = models.BooleanField(
-        default=False, 
-        help_text="Iconic players (faculty) - free assignment, reduce squad size"
-    )
-    assigned_at = models.DateTimeField(null=True, blank=True, help_text="When iconic player was assigned")
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.category}"
     
-    def can_be_iconic(self):
-        """Check if player can be assigned as iconic player"""
-        return (
-            self.user.player_type == 'faculty' and 
-            self.status == 'approved' and 
-            not self.team and 
-            not self.is_iconic
-        )
     class Meta:
         ordering = ['-created_at']
 
