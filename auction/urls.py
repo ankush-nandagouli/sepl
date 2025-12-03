@@ -58,6 +58,12 @@ urlpatterns = [
     path('admin/users/<int:user_id>/delete/', views.delete_user, name='delete_user'),
     path('admin/users/<int:user_id>/revoke/', views.revoke_permissions, name='revoke_permissions'),
     
+    # Iconic Player Management (Admin)
+    path('admin/iconic-players/', views.manage_iconic_players, name='manage_iconic_players'),
+    path('admin/iconic-players/assign/', views.assign_iconic_player, name='assign_iconic_player'),
+    path('admin/iconic-players/remove/', views.remove_iconic_player, name='remove_iconic_player'),
+    path('admin/iconic-players/team/<int:team_id>/', views.get_team_iconic_info, name='get_team_iconic_info'),
+    
     # Banner Management URLs
     path('admin/banners/', views.manage_banners, name='manage_banners'),
     path('admin/banners/<int:banner_id>/edit/', views.edit_banner, name='edit_banner'),

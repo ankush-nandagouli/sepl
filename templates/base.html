@@ -462,6 +462,20 @@
                     Manage Players
                   </a>
                 </li>
+                <!-- NEW ICONIC PLAYER LINK -->
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="{% url 'manage_iconic_players' %}"
+                  >
+                    <i
+                      class="bi bi-star-fill text-warning"
+                      aria-hidden="true"
+                    ></i>
+                    Iconic Players
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
                 <li>
                   <a class="dropdown-item" href="{% url 'manage_auction' %}">
                     <i class="bi bi-gavel" aria-hidden="true"></i> Manage
@@ -476,7 +490,6 @@
                 </li>
               </ul>
             </li>
-
             {% elif user.user_type == 'team_owner' %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'owner_dashboard' %}">

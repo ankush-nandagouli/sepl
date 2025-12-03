@@ -196,34 +196,82 @@ def dashboard(request):
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
-    """Admin dashboard with overview"""
+    """Admin dashboard with comprehensive overview including iconic players"""
+    
+    # Overall counts
     total_teams = Team.objects.count()
     total_players = Player.objects.count()
-    approved_players = Player.objects.filter(status='approved').count()
-    pending_players = Player.objects.filter(status='pending').count()
-    sold_players = Player.objects.filter(status='sold').count()
     
+    # Student player stats (for auctions)
+    student_players = Player.objects.filter(user__player_type='student')
+    approved_students = student_players.filter(status='approved').count()
+    pending_students = student_players.filter(status='pending').count()
+    sold_students = student_players.filter(status='sold').count()
+    
+    # Faculty/Iconic player stats
+    faculty_players = Player.objects.filter(user__player_type='faculty')
+    iconic_faculty = faculty_players.filter(is_iconic=True).count()
+    available_faculty = faculty_players.filter(
+        status='approved', 
+        team__isnull=True,
+        is_iconic=False
+    ).count()
+    
+    # Active auction session
     active_session = AuctionSession.objects.filter(status='live').first()
     
+    # Teams with enhanced annotations
     teams = Team.objects.annotate(
         player_count=Count('players'),
-        total_spent=Sum('players__current_bid')
-    )
+        total_spent=Sum('players__current_bid', filter=Q(players__is_iconic=False))
+    ).select_related('owner').order_by('name')
     
-    recent_logs = AuctionLog.objects.select_related('player', 'winning_team').order_by('-timestamp')[:10]
+    # Add computed fields to teams
+    for team in teams:
+        # Calculate counts using model methods
+        team.regular_players_count = team.players.filter(is_iconic=False).count()
+        team.iconic_players_count = team.players.filter(is_iconic=True).count()
+        team.total_players_count = team.players.count()
+        team.effective_max_players = team.max_players - team.iconic_players_count
+        team.purse_spent = team.total_purse - team.purse_remaining
+    
+    # Recent auction logs
+    recent_logs = AuctionLog.objects.select_related(
+        'player__user', 
+        'winning_team'
+    ).order_by('-timestamp')[:10]
+    
+    # Legacy stats (for backwards compatibility)
+    approved_players = approved_students + iconic_faculty
+    pending_players = pending_students
+    sold_players = sold_students + iconic_faculty
     
     context = {
+        # Overall stats
         'total_teams': total_teams,
         'total_players': total_players,
+        
+        # Student stats (auction players)
+        'approved_students': approved_students,
+        'pending_students': pending_students,
+        'sold_students': sold_students,
+        
+        # Faculty/Iconic stats
+        'iconic_faculty': iconic_faculty,
+        'available_faculty': available_faculty,
+        
+        # Legacy stats (for backwards compatibility)
         'approved_players': approved_players,
         'pending_players': pending_players,
         'sold_players': sold_players,
+        
+        # Session and data
         'active_session': active_session,
         'teams': teams,
         'recent_logs': recent_logs,
     }
+    
     return render(request, 'admin/dashboard.html', context)
-
 @login_required
 @user_passes_test(is_admin)
 def manage_teams(request):
@@ -292,7 +340,7 @@ def manage_auction(request):
     
     sessions = AuctionSession.objects.all().order_by('-created_at')
     active_session = sessions.filter(status='live').first()
-    available_players = Player.objects.filter(status='approved')
+    available_players = Player.objects.filter(status='approved',user__player_type='student')
     
     context = {
         'form': form,
@@ -340,7 +388,7 @@ def auction_control(request):
         messages.warning(request, 'No active auction session!')
         return redirect('manage_auction')
     
-    available_players = Player.objects.filter(status='approved').select_related('user')
+    available_players = Player.objects.filter(status='approved', user__player_type='student').select_related('user')
     teams = Team.objects.all()
     current_bids = []
     
@@ -707,8 +755,6 @@ def user_detail(request, user_id):
     return render(request, 'admin/user_detail.html', context)
 
 
-
-
 @login_required
 @user_passes_test(is_auctioneer)
 def auctioneer_dashboard(request):
@@ -776,7 +822,8 @@ def auctioneer_dashboard(request):
     if search_query:
         # Search by name, category, roll number
         available_players = Player.objects.filter(
-            status='approved'
+            status='approved',
+            user__player_type='student'
         ).filter(
             Q(user__first_name__icontains=search_query) |
             Q(user__last_name__icontains=search_query) |
@@ -786,7 +833,8 @@ def auctioneer_dashboard(request):
     else:
         # Show first 20 players
         available_players = Player.objects.filter(
-            status='approved'
+            status='approved',
+            user__player_type='student' 
         ).select_related('user').order_by('base_price')[:20]
 
     # Players available for next selection
@@ -1663,6 +1711,203 @@ def admin_remove_player_from_team(request, team_id, player_id):
         return redirect('admin_team_detail', team_id=team.id)
     
     return redirect('admin_team_overview')
+
+
+@login_required
+@user_passes_test(is_admin)
+def manage_iconic_players(request):
+    """
+    Admin interface to assign iconic players (faculty) to teams
+    Max 2 iconic players per team
+    """
+    teams = Team.objects.annotate(
+        player_count=Count('players'),
+        iconic_count=Count('players', filter=Q(players__is_iconic=True))
+    ).select_related('owner').order_by('name')
+    
+    # Get available faculty players (not assigned, approved, faculty type)
+    available_iconic = Player.objects.filter(
+        user__player_type='faculty',
+        status='approved',
+        team__isnull=True,
+        is_iconic=False
+    ).select_related('user').order_by('user__first_name')
+    
+    # Get all iconic assignments
+    iconic_assignments = Player.objects.filter(
+        is_iconic=True
+    ).select_related('user', 'team').order_by('team__name', 'assigned_at')
+    
+    context = {
+        'teams': teams,
+        'available_iconic': available_iconic,
+        'iconic_assignments': iconic_assignments,
+        'total_faculty': Player.objects.filter(user__player_type='faculty', status='approved').count(),
+        'assigned_faculty': Player.objects.filter(is_iconic=True).count(),
+    }
+    return render(request, 'admin/manage_iconic_players.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def assign_iconic_player(request):
+    """Assign iconic player to team via AJAX"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+    
+    player_id = request.POST.get('player_id')
+    team_id = request.POST.get('team_id')
+    
+    if not all([player_id, team_id]):
+        return JsonResponse({'success': False, 'message': 'Missing required fields'})
+    
+    try:
+        from django.db import transaction
+        
+        with transaction.atomic():
+            player = Player.objects.select_for_update().get(id=player_id)
+            team = Team.objects.select_for_update().get(id=team_id)
+            
+            # Validation: Check if player is faculty
+            if player.user.player_type != 'faculty':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Only faculty members can be iconic players'
+                })
+            
+            # Validation: Check if player is approved and unassigned
+            if player.status != 'approved':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Player must be approved first'
+                })
+            
+            if player.team:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Player is already assigned to a team'
+                })
+            
+            # Validation: Check team iconic player limit (max 2)
+            current_iconic_count = team.players.filter(is_iconic=True).count()
+            if current_iconic_count >= 2:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'{team.name} already has 2 iconic players (maximum allowed)'
+                })
+            
+            # Assign iconic player
+            player.team = team
+            player.is_iconic = True
+            player.status = 'sold'  # Mark as sold but at 0 cost
+            player.current_bid = 0  # No cost for iconic players
+            player.assigned_at = timezone.now()
+            player.save()
+            
+            # Update team iconic count
+            team.iconic_players_count = current_iconic_count + 1
+            team.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'{player.user.get_full_name()} assigned to {team.name} as iconic player',
+                'player_name': player.user.get_full_name(),
+                'team_name': team.name,
+                'team_iconic_count': team.iconic_players_count,
+                'team_effective_slots': team.effective_max_players(),
+            })
+            
+    except Player.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Player not found'})
+    except Team.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Team not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+
+
+@login_required
+@user_passes_test(is_admin)
+def remove_iconic_player(request):
+    """Remove iconic player from team via AJAX"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+    
+    player_id = request.POST.get('player_id')
+    
+    if not player_id:
+        return JsonResponse({'success': False, 'message': 'Player ID required'})
+    
+    try:
+        from django.db import transaction
+        
+        with transaction.atomic():
+            player = Player.objects.select_for_update().get(id=player_id, is_iconic=True)
+            team = player.team
+            
+            if not team:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Player is not assigned to any team'
+                })
+            
+            # Remove iconic player assignment
+            player_name = player.user.get_full_name()
+            team_name = team.name
+            
+            player.team = None
+            player.is_iconic = False
+            player.status = 'approved'  # Back to available
+            player.current_bid = 0
+            player.assigned_at = None
+            player.save()
+            
+            # Update team iconic count
+            team.iconic_players_count = max(0, team.iconic_players_count - 1)
+            team.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'{player_name} removed from {team_name}',
+                'player_name': player_name,
+                'team_name': team_name,
+                'team_iconic_count': team.iconic_players_count,
+            })
+            
+    except Player.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Iconic player not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+
+
+@login_required
+@user_passes_test(is_admin)
+def get_team_iconic_info(request, team_id):
+    """Get team's iconic player info via AJAX"""
+    try:
+        team = Team.objects.get(id=team_id)
+        iconic_players = team.players.filter(is_iconic=True).select_related('user')
+        
+        iconic_list = [{
+            'id': p.id,
+            'name': p.user.get_full_name(),
+            'category': p.get_category_display(),
+            'photo': p.user.profile_picture.url if p.user.profile_picture else None,
+            'assigned_at': p.assigned_at.strftime('%Y-%m-%d %H:%M') if p.assigned_at else 'N/A',
+        } for p in iconic_players]
+        
+        return JsonResponse({
+            'success': True,
+            'team_name': team.name,
+            'iconic_count': iconic_players.count(),
+            'max_iconic': 2,
+            'can_add_more': iconic_players.count() < 2,
+            'iconic_players': iconic_list,
+            'effective_squad_size': team.effective_max_players(),
+            'regular_players_count': team.players.filter(is_iconic=False).count(),
+        })
+        
+    except Team.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Team not found'})
 
 def robots_txt(request):
     """Serve robots.txt for search engines"""
