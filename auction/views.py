@@ -68,7 +68,7 @@ def home(request):
     # Get latest auction logs for highlights
     recent_sales = AuctionLog.objects.filter(
         sold=True
-    ).select_related('player__user', 'winning_team').order_by('-timestamp')[:5]
+    ).select_related('winning_team').order_by('-timestamp')[:5]
     
     context = {
         'teams': teams,
