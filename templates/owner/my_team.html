@@ -1,282 +1,254 @@
 {% extends 'base.html' %}
 
-{% block title %}My Team - {{ team.name }} | SEPL{% endblock %}
+{% block title %}My Team - {{ team.name }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2>
-                {% if team.logo %}
-                <img src="{{ team.logo.url }}" alt="{{ team.name }}" style="height: 50px; border-radius: 8px;" class="me-2">
-                {% endif %}
-                {{ team.name }}
-            </h2>
-            <p class="text-muted">Owner: {{ team.owner.get_full_name }}</p>
-        </div>
-        <a href="{% url 'owner_dashboard' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-        </a>
-    </div>
-
-    <!-- Team Financial Overview -->
+<div class="container py-4">
+    <!-- Team Header -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2">Total Budget</h6>
-                    <h3 class="mb-0">₹{{ team.total_purse }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2">Remaining Purse</h6>
-                    <h3 class="mb-0">₹{{ team.purse_remaining }}</h3>
-                    <small>{{ purse_percentage|floatformat:1 }}% left</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2">Amount Spent</h6>
-                    <h3 class="mb-0">₹{{ total_spent }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2">Squad Size</h6>
-                    <h3 class="mb-0">{{ team.total_players_count }}/{{ team.max_players }}</h3>
-                    <small>
-                        Regular: {{ team.regular_players_count }}/{{ team.effective_max_players }}<br>
-                        Iconic: {{ team.iconic_players_count }}
-                    </small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ICONIC PLAYERS SECTION (NEW) -->
-    {% if team.players.filter_is_iconic_True %}
-    <div class="card mb-4 border-warning">
-        <div class="card-header bg-warning text-dark">
-            <h5 class="mb-0">
-                <i class="bi bi-star-fill"></i> Iconic Players (Faculty) - {{ team.iconic_players_count }}/2
-            </h5>
-            <small>Free assignments that reduce regular squad capacity</small>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                {% for player in team.players.all %}
-                {% if player.is_iconic %}
-                <div class="col-md-6 mb-3">
-                    <div class="card h-100 shadow-sm border-warning">
-                        <div class="card-body">
-                            <div class="d-flex align-items-start">
-                                {% if player.user.profile_picture %}
-                                <img src="{{ player.user.profile_picture.url }}" 
-                                     alt="{{ player.user.get_full_name }}"
-                                     class="rounded-circle me-3"
-                                     style="width: 80px; height: 80px; object-fit: cover;">
-                                {% else %}
-                                <div class="rounded-circle bg-warning text-dark me-3 d-flex align-items-center justify-content-center"
-                                     style="width: 80px; height: 80px; font-size: 2rem;">
-                                    <i class="bi bi-star-fill"></i>
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                            {% if team.logo %}
+                            <img src="{{ team.logo.url }}" alt="{{ team.name }}" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 5px solid white;">
+                            {% else %}
+                            <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                                <i class="bi bi-shield-fill text-primary" style="font-size: 4rem;"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <h1 class="display-3 text-white mb-3">{{ team.name }}</h1>
+                            <p class="lead text-white-50 mb-3">
+                                <i class="bi bi-person-circle"></i> Owner: {{ user.get_full_name }}
+                            </p>
+                            <div class="row text-white">
+                                <div class="col-sm-4">
+                                    <h3>{{ players.count }}/{{ team.max_players }}</h3>
+                                    <p class="mb-0">Players</p>
                                 </div>
-                                {% endif %}
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h5 class="mb-1">{{ player.user.get_full_name }}</h5>
-                                            <span class="badge bg-warning text-dark">
-                                                <i class="bi bi-star-fill"></i> ICONIC PLAYER
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <hr class="my-2">
-                                    
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <small class="text-muted">Category</small>
-                                            <p class="mb-0"><span class="badge bg-info">{{ player.get_category_display }}</span></p>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="text-muted">Branch</small>
-                                            <p class="mb-0">{{ player.user.get_branch_display|default:"N/A" }}</p>
-                                        </div>
-                                    </div>
-                                    
-                                    {% if player.batting_style or player.bowling_style %}
-                                    <hr class="my-2">
-                                    <div>
-                                        {% if player.batting_style %}
-                                        <p class="mb-1"><small><strong>🏏 Batting:</strong> {{ player.batting_style }}</small></p>
-                                        {% endif %}
-                                        {% if player.bowling_style %}
-                                        <p class="mb-0"><small><strong>⚾ Bowling:</strong> {{ player.bowling_style }}</small></p>
-                                        {% endif %}
-                                    </div>
-                                    {% endif %}
-                                    
-                                    <div class="mt-2">
-                                        <small class="text-muted">
-                                            <i class="bi bi-clock"></i> Assigned: {{ player.assigned_at|date:"M d, Y" }}
-                                        </small>
-                                    </div>
+                                <div class="col-sm-4">
+                                    <h3>₹{{ total_spent }}</h3>
+                                    <p class="mb-0">Spent</p>
+                                </div>
+                                <div class="col-sm-4">
+                                    <h3>₹{{ team.purse_remaining }}</h3>
+                                    <p class="mb-0">Remaining</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                {% endif %}
-                {% endfor %}
             </div>
-            
-            <div class="alert alert-info mt-3">
-                <i class="bi bi-info-circle"></i> <strong>Note:</strong> Iconic players are free (₹0) and reduce your regular squad capacity from {{ team.max_players }} to {{ team.effective_max_players }} slots.
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="bi bi-wallet2"></i> Purse Status</h5>
+                    <div class="progress mb-3" style="height: 35px;">
+                        <div class="progress-bar bg-danger" role="progressbar" 
+                             style="width: {{ 100|add:"-"|add:purse_percentage|floatformat:0 }}%;">
+                            Spent: ₹{{ total_spent }}
+                        </div>
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ purse_percentage }}%;">
+                            Remaining: ₹{{ team.purse_remaining }}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Total Purse: ₹{{ team.total_purse }}</span>
+                        <span class="text-muted">Available Slots: {{ team.slots_remaining }}/{{ team.max_players }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Squad Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-3"><i class="bi bi-bar-chart-fill"></i> Squad Analysis</h3>
+        </div>
+        
+        {% for category, data in squad_stats.items %}
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="card shadow-sm h-100 {% if data.count == 0 %}border-danger{% endif %}">
+                <div class="card-body text-center">
+                    <i class="bi {% if category == 'batsman' %}bi-activity{% elif category == 'bowler' %}bi-arrow-up-circle{% elif category == 'all_rounder' %}bi-star{% else %}bi-shield-check{% endif %} 
+                       {% if data.count == 0 %}text-danger{% else %}text-primary{% endif %}" 
+                       style="font-size: 2.5rem;"></i>
+                    <h4 class="mt-2">{{ data.count }}</h4>
+                    <p class="text-muted mb-2">{{ category|title|replace:"_":" " }}s</p>
+                    <p class="mb-0 small text-success">₹{{ data.spent }} spent</p>
+                    {% if data.count == 0 %}
+                    <span class="badge bg-danger mt-2">Need players!</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Squad by Category -->
+    {% for category, data in squad_stats.items %}
+    {% if data.players %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-people-fill"></i> 
+                        {{ category|title|replace:"_":" " }}s ({{ data.count }})
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for player in data.players %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 player-card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if player.user.profile_picture %}
+                                        <img src="{{ player.user.profile_picture.url }}" 
+                                             alt="{{ player.user.get_full_name }}" 
+                                             class="rounded-circle me-3" 
+                                             style="width: 60px; height: 60px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                             style="width: 60px; height: 60px;">
+                                            <i class="bi bi-person-fill text-white" style="font-size: 1.5rem;"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <h5 class="mb-1">{{ player.user.get_full_name }}</h5>
+                                            <span class="badge bg-info">{{ player.user.get_player_type_display|default:"N/A" }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="player-details">
+                                        {% if player.user.player_type == 'student' %}
+                                        <p class="mb-1 small">
+                                            <i class="bi bi-mortarboard"></i> 
+                                            {{ player.user.get_course_display|default:"N/A" }}
+                                        </p>
+                                        <p class="mb-1 small">
+                                            <i class="bi bi-book"></i> 
+                                            {{ player.user.get_branch_display|default:"N/A" }}
+                                        </p>
+                                        {% endif %}
+                                        
+                                        {% if player.batting_style %}
+                                        <p class="mb-1 small">
+                                            <i class="bi bi-activity text-primary"></i> 
+                                            {{ player.batting_style }}
+                                        </p>
+                                        {% endif %}
+                                        
+                                        {% if player.bowling_style %}
+                                        <p class="mb-1 small">
+                                            <i class="bi bi-arrow-up-circle text-success"></i> 
+                                            {{ player.bowling_style }}
+                                        </p>
+                                        {% endif %}
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="text-center">
+                                        <div class="price-display">
+                                            <span class="text-muted small d-block">Purchase Price</span>
+                                            <h4 class="text-success mb-0">₹{{ player.current_bid }}</h4>
+                                        </div>
+                                        <a href="{% url 'player_profile' player.id %}" class="btn btn-sm btn-outline-primary mt-2">
+                                            <i class="bi bi-eye"></i> View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    {% if not players %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-warning text-center">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <h4>No Players Yet!</h4>
+                <p>You haven't bought any players. Head to the auction to start building your squad!</p>
+                <a href="{% url 'live_auction' %}" class="btn btn-primary">
+                    <i class="bi bi-hammer"></i> Go to Auction
+                </a>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- REGULAR SQUAD BREAKDOWN (UPDATED) -->
-    <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0">
-                <i class="bi bi-people-fill"></i> Regular Squad - {{ team.regular_players_count }}/{{ team.effective_max_players }} slots
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="text-primary">{{ squad_stats.batsman.count }}</h4>
-                            <p class="mb-0">Batsmen</p>
-                            <small class="text-muted">₹{{ squad_stats.batsman.spent }}</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="text-success">{{ squad_stats.bowler.count }}</h4>
-                            <p class="mb-0">Bowlers</p>
-                            <small class="text-muted">₹{{ squad_stats.bowler.spent }}</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="text-warning">{{ squad_stats.all_rounder.count }}</h4>
-                            <p class="mb-0">All-Rounders</p>
-                            <small class="text-muted">₹{{ squad_stats.all_rounder.spent }}</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="text-info">{{ squad_stats.wicket_keeper.count }}</h4>
-                            <p class="mb-0">Wicket Keepers</p>
-                            <small class="text-muted">₹{{ squad_stats.wicket_keeper.spent }}</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Regular Players List -->
-            {% if players %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Player</th>
-                            <th>Category</th>
-                            <th>Type</th>
-                            <th>Price</th>
-                            <th>Skills</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for player in players %}
-                        {% if not player.is_iconic %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if player.user.profile_picture %}
-                                    <img src="{{ player.user.profile_picture.url }}" 
-                                         alt="{{ player.user.get_full_name }}"
-                                         class="rounded-circle me-2"
-                                         style="width: 40px; height: 40px; object-fit: cover;">
-                                    {% else %}
-                                    <div class="rounded-circle bg-secondary text-white me-2 d-flex align-items-center justify-content-center"
-                                         style="width: 40px; height: 40px;">
-                                        <i class="bi bi-person"></i>
-                                    </div>
-                                    {% endif %}
-                                    <strong>{{ player.user.get_full_name }}</strong>
-                                </div>
-                            </td>
-                            <td><span class="badge bg-info">{{ player.get_category_display }}</span></td>
-                            <td>
-                                {% if player.user.player_type == 'student' %}
-                                <span class="badge bg-primary">Student</span>
-                                {% else %}
-                                <span class="badge bg-success">Faculty</span>
-                                {% endif %}
-                            </td>
-                            <td><strong>₹{{ player.current_bid }}</strong></td>
-                            <td>
-                                <small>
-                                    {% if player.batting_style %}🏏 {{ player.batting_style }}{% endif %}
-                                    {% if player.bowling_style %}<br>⚾ {{ player.bowling_style }}{% endif %}
-                                </small>
-                            </td>
-                        </tr>
-                        {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="alert alert-warning">
-                <i class="bi bi-exclamation-triangle"></i> No regular players in your squad yet. Participate in the auction to build your team!
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
     <!-- Recent Auction Activity -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Auction Activity</h5>
-        </div>
-        <div class="card-body">
-            {% if recent_bids %}
-            <div class="list-group">
-                {% for bid in recent_bids %}
-                <div class="list-group-item">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{{ bid.player.user.get_full_name }}</strong>
-                            <span class="badge bg-secondary">₹{{ bid.amount }}</span>
-                        </div>
-                        <small class="text-muted">{{ bid.timestamp|timesince }} ago</small>
+    {% if recent_bids %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="bi bi-clock-history"></i> Recent Bidding Activity</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Amount</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bid in recent_bids|slice:":10" %}
+                                <tr>
+                                    <td>{{ bid.player.user.get_full_name }}</td>
+                                    <td><span class="badge bg-success">₹{{ bid.amount }}</span></td>
+                                    <td class="text-muted">{{ bid.timestamp|timesince }} ago</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                {% endfor %}
             </div>
-            {% else %}
-            <p class="text-muted mb-0">No recent bidding activity.</p>
-            {% endif %}
         </div>
     </div>
+    {% endif %}
 </div>
+
+<style>
+.player-card {
+    transition: all 0.3s ease;
+    border: 2px solid #f0f0f0;
+}
+.player-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    border-color: #667eea;
+}
+.player-details p {
+    margin-bottom: 0.5rem;
+}
+.price-display {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+</style>
 {% endblock %}
