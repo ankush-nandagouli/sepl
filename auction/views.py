@@ -1736,7 +1736,7 @@ def manage_iconic_players(request):
     # Get all iconic assignments
     iconic_assignments = Player.objects.filter(
         is_iconic=True
-    ).select_related('user', 'team').order_by('team__name', 'assigned_at')
+    ).select_related('user', 'team').order_by('team__name')
     
     context = {
         'teams': teams,
@@ -1801,7 +1801,7 @@ def assign_iconic_player(request):
             player.is_iconic = True
             player.status = 'sold'  # Mark as sold but at 0 cost
             player.current_bid = 0  # No cost for iconic players
-            player.assigned_at = timezone.now()
+            #player.assigned_at = timezone.now()
             player.save()
             
             # Update team iconic count
@@ -1858,7 +1858,7 @@ def remove_iconic_player(request):
             player.is_iconic = False
             player.status = 'approved'  # Back to available
             player.current_bid = 0
-            player.assigned_at = None
+            #player.assigned_at = None
             player.save()
             
             # Update team iconic count
@@ -1892,7 +1892,7 @@ def get_team_iconic_info(request, team_id):
             'name': p.user.get_full_name(),
             'category': p.get_category_display(),
             'photo': p.user.profile_picture.url if p.user.profile_picture else None,
-            'assigned_at': p.assigned_at.strftime('%Y-%m-%d %H:%M') if p.assigned_at else 'N/A',
+           # 'assigned_at': p.assigned_at.strftime('%Y-%m-%d %H:%M') if p.assigned_at else 'N/A',
         } for p in iconic_players]
         
         return JsonResponse({
