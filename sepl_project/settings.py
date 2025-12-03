@@ -92,23 +92,14 @@ WSGI_APPLICATION = 'sepl_project.wsgi.application'
 # ========================================
 # DATABASE
 # ========================================
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.getenv("DATABASE_URL"),
-#         conn_max_age=600,
-#         ssl_require=True
-#     )
-# }
 DATABASES = {
-         'default': {
-             'ENGINE': 'django.db.backends.postgresql',
-             'NAME': 'railway',  # Your database name
-             'USER': 'postgres',  # Your database user
-             'PASSWORD': 'BMvFKZGJWKGliaozyhlyRQGvtzGNGFAp',  # Your database user's password
-             'HOST': 'postgres.railway.internal',  # Or the IP/hostname of your PostgreSQL server
-             'PORT': '5432',  # Default PostgreSQL port
-         }
-     }
+    'default': dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
+
 
 
 # ========================================
