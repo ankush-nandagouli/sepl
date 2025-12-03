@@ -236,10 +236,9 @@ def admin_dashboard(request):
         team.purse_spent = team.total_purse - team.purse_remaining
     
     # Recent auction logs
-    recent_logs = AuctionLog.objects.select_related(
-        'player__user', 
-        'winning_team'
-    ).order_by('-timestamp')[:10]
+    recent_logs = AuctionLog.objects.select_related('winning_team'
+        #'player__user', 
+        ).order_by('-timestamp')[:10]
     
     # Legacy stats (for backwards compatibility)
     approved_players = approved_students + iconic_faculty
@@ -844,7 +843,9 @@ def auctioneer_dashboard(request):
 
     recent_sales = AuctionLog.objects.filter(
         auction_session=active_session
-    ).select_related('player__user', 'winning_team').order_by('-timestamp')[:10]
+    ).select_related(
+        #'player__user', 
+        'winning_team').order_by('-timestamp')[:10]
 
     return render(request, 'auctioneer/dashboard.html', {
         'session': active_session,
