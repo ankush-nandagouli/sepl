@@ -43,12 +43,10 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ['name', 'owner', 'purse_remaining', 'total_purse', 'players_count', 'max_players', 'regular_players_display',
-        'iconic_players_display',
-        'effective_slots_display','slots_remaining']
+    list_display = ['name', 'owner', 'purse_remaining', 'total_purse', 'players_count', 'max_players', 'slots_remaining']
     list_filter = ['created_at']
     search_fields = ['name', 'owner__username']
-    readonly_fields = ['created_at', 'purse_spent', 'iconic_players_count']
+    readonly_fields = ['created_at', 'purse_spent']
     
     fieldsets = (
         ('Basic Information', {
@@ -58,8 +56,8 @@ class TeamAdmin(admin.ModelAdmin):
             'fields': ('total_purse', 'purse_remaining', 'purse_spent')
         }),
         ('Team Limits', {
-            'fields': ('max_players', 'iconic_players_count'),
-            'description': 'Maximum number of players this team can have with iconic players'
+            'fields': ('max_players',),
+            'description': 'Maximum number of players this team can have'
         }),
         ('Metadata', {
             'fields': ('created_at',),
@@ -71,45 +69,27 @@ class TeamAdmin(admin.ModelAdmin):
         return f"₹{obj.purse_spent()}"
     purse_spent.short_description = 'Purse Spent'
     
-    def regular_players_display(self, obj):
-        """Show regular players count"""
-        regular = obj.regular_players_count()
-        effective = obj.effective_max_players()
-        return f"{regular}/{effective}"
-    regular_players_display.short_description = 'Regular Players'
-    
-    def iconic_players_display(self, obj):
-        """Show iconic players count"""
-        return f"{obj.iconic_players_count}/2"
-    iconic_players_display.short_description = 'Iconic Players'
-    
-    def effective_slots_display(self, obj):
-        """Show effective squad capacity"""
-        return f"{obj.effective_max_players()} (base: {obj.max_players})"
-    effective_slots_display.short_description = 'Effective Capacity'
-    
-    
     def slots_remaining(self, obj):
         return f"{obj.slots_remaining()}/{obj.max_players}"
     slots_remaining.short_description = 'Slots Remaining'
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ['player_name', 'player_type_display', 'category', 'status', 'team', 'is_iconic_display', 'base_price', 'current_bid', 'profile_pic']
-    list_filter = ['status', 'category', 'team', 'is_iconic', 'user__player_type', 'user__course', 'user__branch']
+    list_display = ['player_name', 'player_type_display', 'category', 'status', 'team', 'base_price', 'current_bid', 'profile_pic']
+    list_filter = ['status', 'category', 'team', 'user__player_type', 'user__course', 'user__branch']
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__roll_number']
-    readonly_fields = ['created_at', 'current_bid','assigned_at']
+    readonly_fields = ['created_at', 'current_bid']
     actions = ['approve_players', 'reject_players', 'reset_players']
     
     fieldsets = (
         ('Player Information', {
-            'fields': ('user', 'category', 'status', 'is_iconic')
+            'fields': ('user', 'category', 'status')
         }),
         ('Cricket Skills', {
             'fields': ('batting_style', 'bowling_style', 'previous_team')
         }),
         ('Auction Details', {
-            'fields': ('base_price', 'current_bid', 'team', 'assigned_at')
+            'fields': ('base_price', 'current_bid', 'team')
         }),
         ('Metadata', {
             'fields': ('created_at',),
@@ -128,13 +108,6 @@ class PlayerAdmin(admin.ModelAdmin):
         return '-'
     player_type_display.short_description = 'Type'
     
-    def is_iconic_display(self, obj):
-        """Show iconic status with icon"""
-        if obj.is_iconic:
-            return format_html('<span style="color: gold;">⭐ ICONIC</span>')
-        return '-'
-    is_iconic_display.short_description = 'Iconic'
-    
     def profile_pic(self, obj):
         if obj.user.profile_picture:
             return format_html('<img src="{}" width="40" height="40" style="border-radius: 50%; object-fit: cover;" />', obj.user.profile_picture.url)
@@ -152,21 +125,9 @@ class PlayerAdmin(admin.ModelAdmin):
     reject_players.short_description = "Reject selected players"
     
     def reset_players(self, request, queryset):
-        updated = queryset.update(status='approved', current_bid=0, team=None, is_iconic=False, assigned_at=None)
+        updated = queryset.update(status='approved', current_bid=0, team=None)
         self.message_user(request, f'{updated} player(s) reset to available status.')
     reset_players.short_description = "Reset players (set to approved, remove team)"
-
-    def mark_as_iconic(self, request, queryset):
-        """Quick action to mark faculty as iconic (still need team assignment)"""
-        faculty_players = queryset.filter(user__player_type='faculty')
-        count = faculty_players.count()
-        if count == 0:
-            self.message_user(request, 'No faculty players selected!', level='warning')
-            return
-        
-        faculty_players.update(is_iconic=True, status='approved')
-        self.message_user(request, f'{count} faculty player(s) marked as iconic. Assign them to teams via the Iconic Player Management page.')
-    mark_as_iconic.short_description = "Mark as iconic (faculty only)"
 
 @admin.register(AuctionSession)
 class AuctionSessionAdmin(admin.ModelAdmin):
