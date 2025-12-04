@@ -8,7 +8,7 @@ class User(AbstractUser):
         ('team_owner', 'Team Owner'),
         ('team_manager', 'Team Manager'),
         ('umpire', 'Umpire'),
-        ('auctioneer', 'Auctioneer'),
+       # ('auctioneer', 'Auctioneer'),
         # ('admin', 'Administrator'),
     )
     
