@@ -1,322 +1,289 @@
-{% extends 'base.html' %} {% block title %}Admin Dashboard - SEPL{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - SEPL{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
-  <h2 class="mb-4"><i class="bi bi-shield-lock"></i> Admin Dashboard</h2>
-
-  <!-- Quick Stats -->
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card bg-primary text-white">
-        <div class="card-body">
-          <h6>Total Teams</h6>
-          <h3>{{ total_teams }}</h3>
+    <h2 class="mb-4"><i class="bi bi-shield-lock"></i> Admin Dashboard</h2>
+    
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>Total Teams</h6>
+                    <h3>{{ total_teams }}</h3>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card bg-success text-white">
-        <div class="card-body">
-          <h6>Approved Players</h6>
-          <h3>{{ approved_players }}</h3>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Approved Players</h6>
+                    <h3>{{ approved_players }}</h3>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card bg-warning text-dark">
-        <div class="card-body">
-          <h6>Pending Approvals</h6>
-          <h3>{{ pending_players }}</h3>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6>Pending Approvals</h6>
+                    <h3>{{ pending_players }}</h3>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card bg-info text-white">
-        <div class="card-body">
-          <h6>Players Sold</h6>
-          <h3>{{ sold_players }}</h3>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>Players Sold</h6>
+                    <h3>{{ sold_players }}</h3>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Management Sections -->
-  <div class="row">
-    <!-- User Management -->
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-primary text-white">
-          <h5 class="mb-0">
-            <i class="bi bi-people-fill"></i> User Management
-          </h5>
-        </div>
-        <div class="card-body">
-          <p>Manage all users, suspend accounts, and control permissions.</p>
-          <a href="{% url 'manage_users' %}" class="btn btn-primary w-100">
-            <i class="bi bi-person-gear"></i> Manage Users
-          </a>
-        </div>
-      </div>
     </div>
 
-    <!-- Team Management -->
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-success text-white">
-          <h5 class="mb-0">
-            <i class="bi bi-shield-fill"></i> Team Management
-          </h5>
+    <!-- Management Sections -->
+    <div class="row">
+        <!-- User Management -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-people-fill"></i> User Management</h5>
+                </div>
+                <div class="card-body">
+                    <p>Manage all users, suspend accounts, and control permissions.</p>
+                    <a href="{% url 'manage_users' %}" class="btn btn-primary w-100">
+                        <i class="bi bi-person-gear"></i> Manage Users
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-          <p>Create teams, manage squads, and view team details.</p>
-          <a href="{% url 'manage_teams' %}" class="btn btn-success w-100 mb-2">
-            <i class="bi bi-people"></i> Manage Teams
-          </a>
-          <a
-            href="{% url 'admin_team_overview' %}"
-            class="btn btn-outline-success w-100"
-          >
-            <i class="bi bi-bar-chart"></i> Team Overview
-          </a>
-        </div>
-      </div>
-    </div>
 
-    <!-- Player Management -->
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-warning text-dark">
-          <h5 class="mb-0">
-            <i class="bi bi-person-badge"></i> Player Management
-          </h5>
+        <!-- Team Management -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-shield-fill"></i> Team Management</h5>
+                </div>
+                <div class="card-body">
+                    <p>Create teams, manage squads, and view team details.</p>
+                    <a href="{% url 'manage_teams' %}" class="btn btn-success w-100 mb-2">
+                        <i class="bi bi-people"></i> Manage Teams
+                    </a>
+                    <a href="{% url 'admin_team_overview' %}" class="btn btn-outline-success w-100">
+                        <i class="bi bi-bar-chart"></i> Team Overview
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-          <p>Approve/reject player registrations and manage profiles.</p>
-          <a href="{% url 'manage_players' %}" class="btn btn-warning w-100">
-            <i class="bi bi-clipboard-check"></i> Manage Players
-          </a>
-        </div>
-      </div>
-    </div>
 
-    <!-- NEW: Iconic Players -->
-    <div class="col-md-4 mb-4">
-      <div class="card h-100 border-warning">
-        <div class="card-header bg-warning text-dark">
-          <h5 class="mb-0"><i class="bi bi-star-fill"></i> Iconic Players</h5>
+        <!-- Player Management -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-person-badge"></i> Player Management</h5>
+                </div>
+                <div class="card-body">
+                    <p>Approve/reject player registrations and manage profiles.</p>
+                    <a href="{% url 'manage_players' %}" class="btn btn-warning w-100">
+                        <i class="bi bi-clipboard-check"></i> Manage Players
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-          <p>
-            Assign faculty members as iconic players to teams (max 2 per team).
-          </p>
-          <a
-            href="{% url 'manage_iconic_players' %}"
-            class="btn btn-warning w-100"
-          >
-            <i class="bi bi-star"></i> Manage Iconic Players
-          </a>
-        </div>
-      </div>
-    </div>
 
-    <!-- Auction Management -->
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-danger text-white">
-          <h5 class="mb-0"><i class="bi bi-gavel"></i> Auction Management</h5>
+        <!-- NEW: Iconic Players -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-star-fill"></i> Iconic Players</h5>
+                </div>
+                <div class="card-body">
+                    <p>Assign faculty members as iconic players to teams (max 2 per team).</p>
+                    <a href="{% url 'manage_iconic_players' %}" class="btn btn-warning w-100">
+                        <i class="bi bi-star"></i> Manage Iconic Players
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-          <p>Create sessions, start/stop auctions, and control bidding.</p>
-          <a
-            href="{% url 'manage_auction' %}"
-            class="btn btn-danger w-100 mb-2"
-          >
-            <i class="bi bi-calendar-event"></i> Manage Sessions
-          </a>
-          {% if active_session %}
-          <a
-            href="{% url 'auction_control' %}"
-            class="btn btn-outline-danger w-100"
-          >
-            <i class="bi bi-controller"></i> Auction Control Room
-          </a>
-          {% endif %}
-        </div>
-      </div>
-    </div>
 
-    <!-- Banner Management -->
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-info text-white">
-          <h5 class="mb-0"><i class="bi bi-images"></i> Banner Management</h5>
+        <!-- Auction Management -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-gavel"></i> Auction Management</h5>
+                </div>
+                <div class="card-body">
+                    <p>Create sessions, start/stop auctions, and control bidding.</p>
+                    <a href="{% url 'manage_auction' %}" class="btn btn-danger w-100 mb-2">
+                        <i class="bi bi-calendar-event"></i> Manage Sessions
+                    </a>
+                    {% if active_session %}
+                    <a href="{% url 'auction_control' %}" class="btn btn-outline-danger w-100">
+                        <i class="bi bi-controller"></i> Auction Control Room
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-          <p>Upload and manage tournament banners for the homepage.</p>
-          <a href="{% url 'manage_banners' %}" class="btn btn-info w-100">
-            <i class="bi bi-image"></i> Manage Banners
-          </a>
+
+        <!-- Banner Management -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-images"></i> Banner Management</h5>
+                </div>
+                <div class="card-body">
+                    <p>Upload and manage tournament banners for the homepage.</p>
+                    <a href="{% url 'manage_banners' %}" class="btn btn-info w-100">
+                        <i class="bi bi-image"></i> Manage Banners
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <div class="card-header bg-secondary text-white">
-          <h5 class="mb-0">
-            <i class="bi bi-gear-fill"></i> Sold/Unsold Players
-          </h5>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-gear-fill"></i> Sold/Unsold Players</h5>
+                </div>
+                <div class="card-body">
+                    <p>View and manage sold and unsold players.</p>
+                    <a href="{% url 'sold_unsold_players' %}" class="btn btn-secondary w-100">
+                        <i class="bi bi-sliders"></i> Sold/Unsold Players
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-          <p>View and manage sold and unsold players.</p>
-          <a
-            href="{% url 'sold_unsold_players' %}"
-            class="btn btn-secondary w-100"
-          >
-            <i class="bi bi-sliders"></i> Sold/Unsold Players
-          </a>
+        <!-- NEW: Reports & Exports -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-spreadsheet"></i> Reports & Exports</h5>
+                </div>
+                <div class="card-body">
+                    <p>Export comprehensive tournament data in CSV format.</p>
+                    <a href="{% url 'export_reports' %}" class="btn btn-success w-100">
+                        <i class="bi bi-download"></i> Export Reports
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
-      <!-- NEW: Reports & Exports -->
-      <div class="col-md-4 mb-4">
-        <div class="card h-100 border-success">
-          <div class="card-header bg-success text-white">
-            <h5 class="mb-0">
-              <i class="bi bi-file-earmark-spreadsheet"></i> Reports & Exports
-            </h5>
-          </div>
-          <div class="card-body">
-            <p>Export comprehensive tournament data in CSV format.</p>
-            <a href="{% url 'export_reports' %}" class="btn btn-success w-100">
-              <i class="bi bi-download"></i> Export Reports
-            </a>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Recent Activity -->
     <div class="row">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header bg-dark text-white">
-            <h5 class="mb-0">
-              <i class="bi bi-clock-history"></i> Recent Auction Activity
-            </h5>
-          </div>
-          <div class="card-body">
-            {% if recent_logs %}
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Player</th>
-                    <th>Player Type</th>
-                    <th>Team</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for log in recent_logs %}
-                  <tr>
-                    <td>
-                      <strong>{{ log.player.user.get_full_name }}</strong>
-                    </td>
-                    <td>
-                      {% if log.player.user.player_type == 'faculty' %}
-                      <span class="badge bg-warning text-dark"
-                        >Faculty (Iconic)</span
-                      >
-                      {% else %}
-                      <span class="badge bg-info">Student</span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if log.sold %} {{ log.winning_team.name }} {% else %}
-                      <span class="text-muted">-</span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if log.player.user.player_type == 'faculty' %}
-                      <span class="badge bg-success">FREE (Iconic)</span>
-                      {% else %} ₹{{ log.final_amount }} {% endif %}
-                    </td>
-                    <td>
-                      {% if log.sold %}
-                      <span class="badge bg-success">Sold</span>
-                      {% else %}
-                      <span class="badge bg-secondary">Unsold</span>
-                      {% endif %}
-                    </td>
-                    <td><small>{{ log.timestamp|date:"M d, H:i" }}</small></td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Auction Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_logs %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Player Type</th>
+                                    <th>Team</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_logs %}
+                                <tr>
+                                    <td><strong>{{ log.player.user.get_full_name }}</strong></td>
+                                    <td>
+                                        {% if log.player.user.player_type == 'faculty' %}
+                                        <span class="badge bg-warning text-dark">Faculty (Iconic)</span>
+                                        {% else %}
+                                        <span class="badge bg-info">Student</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.sold %}
+                                        {{ log.winning_team.name }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.player.user.player_type == 'faculty' %}
+                                        <span class="badge bg-success">FREE (Iconic)</span>
+                                        {% else %}
+                                        ₹{{ log.final_amount }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.sold %}
+                                        <span class="badge bg-success">Sold</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Unsold</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><small>{{ log.timestamp|date:"M d, H:i" }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No auction activity yet</p>
+                    {% endif %}
+                </div>
             </div>
-            {% else %}
-            <p class="text-muted text-center">No auction activity yet</p>
-            {% endif %}
-          </div>
         </div>
-      </div>
     </div>
 
     <!-- Team Financial Summary -->
     <div class="row mt-4">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">
-              <i class="bi bi-cash-stack"></i> Team Financial Summary
-            </h5>
-          </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Team</th>
-                    <th>Total Purse</th>
-                    <th>Purse Spent</th>
-                    <th>Purse Remaining</th>
-                    <th>Total Players</th>
-                    <th>Iconic Players</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for team in teams %}
-                  <tr>
-                    <td><strong>{{ team.name }}</strong></td>
-                    <td>₹{{ team.total_purse }}</td>
-                    <td>₹{{ team.total_spent|default:0 }}</td>
-                    <td>₹{{ team.purse_remaining }}</td>
-                    <td>{{ team.player_count }}/{{ team.max_players }}</td>
-                    <td>
-                      {% with iconic_count=team.players.filter|length %}
-                      <span class="badge bg-warning text-dark"
-                        >{{ iconic_count }}</span
-                      >
-                      {% endwith %}
-                    </td>
-                    <td>
-                      <a
-                        href="{% url 'admin_team_detail' team.id %}"
-                        class="btn btn-sm btn-primary"
-                      >
-                        <i class="bi bi-eye"></i> View
-                      </a>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Team Financial Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Team</th>
+                                    <th>Total Purse</th>
+                                    <th>Purse Spent</th>
+                                    <th>Purse Remaining</th>
+                                    <th>Total Players</th>
+                                    <th>Iconic Players</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for team in teams %}
+                                <tr>
+                                    <td><strong>{{ team.name }}</strong></td>
+                                    <td>₹{{ team.total_purse }}</td>
+                                    <td>₹{{ team.total_spent|default:0 }}</td>
+                                    <td>₹{{ team.purse_remaining }}</td>
+                                    <td>{{ team.player_count }}/{{ team.max_players }}</td>
+                                    <td>
+                                        {% with iconic_count=team.players.filter|length %}
+                                        <span class="badge bg-warning text-dark">{{ iconic_count }}</span>
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'admin_team_detail' team.id %}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
-  {% endblock %}
 </div>
+{% endblock %}
