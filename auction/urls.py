@@ -86,7 +86,13 @@ urlpatterns = [
     path('auctioneer/complete-sale/', views.auctioneer_complete_sale, name='auctioneer_complete_sale'),
     path('auctioneer/call-going/', views.auctioneer_call_going, name='auctioneer_call_going'),
     path('auctioneer/team/<int:team_id>/', views.auctioneer_team_info, name='auctioneer_team_info'),
-    
+     # ========================================
+    # SOLD/UNSOLD PLAYERS MANAGEMENT (NEW)
+    # ========================================
+    path('admin/players/sold-unsold/', views.sold_unsold_players, name='sold_unsold_players'),
+    path('admin/players/<int:player_id>/detail/', views.player_detail_view, name='player_detail_view'),
+    path('admin/players/sold-unsold/export/', views.export_sold_unsold_report, name='export_sold_unsold_report'),
+    path('api/quick-stats/', views.quick_stats_api, name='quick_stats_api'),
     # Team Owner URLs
     path('owner/dashboard/', views.owner_dashboard, name='owner_dashboard'),
     path('owner/auction/', views.live_auction, name='live_auction'),

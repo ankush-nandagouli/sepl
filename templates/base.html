@@ -430,7 +430,14 @@
                 Dashboard
               </a>
             </li>
-
+             <li><hr class="dropdown-divider" /></li>
+    
+    <!--  Sold/Unsold Players for Auctioneer -->
+    <li>
+      <a class="dropdown-item" href="{% url 'sold_unsold_players' %}">
+        <i class="bi bi-list-check" aria-hidden="true"></i> Sold/Unsold Players
+      </a>
+    </li>
             {% elif user.user_type == 'admin' %}
             <li class="nav-item dropdown">
               <a

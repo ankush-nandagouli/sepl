@@ -14,6 +14,7 @@ from .utils import broadcast_bid_update, broadcast_player_update, broadcast_bidd
 import json
 from django.db import transaction
 import csv
+from django.core.paginator import Paginator
 
 
 def is_admin(user):
@@ -2062,6 +2063,259 @@ def export_team_squads(request):
     
     return response
 
+@login_required
+@user_passes_test(lambda u: u.user_type in ['admin', 'auctioneer'])
+def sold_unsold_players(request):
+    """
+    Combined view for sold and unsold players with search and filters
+    Accessible by admin and auctioneer
+    """
+    # Get filter parameters
+    status_filter = request.GET.get('status', 'all')  # all, sold, unsold
+    category_filter = request.GET.get('category', '')
+    player_type_filter = request.GET.get('player_type', '')
+    team_filter = request.GET.get('team', '')
+    search_query = request.GET.get('search', '').strip()
+    
+    # Base queryset
+    players = Player.objects.select_related('user', 'team').all()
+    
+    # Apply status filter
+    if status_filter == 'sold':
+        players = players.filter(status='sold')
+    elif status_filter == 'unsold':
+        players = players.filter(status='unsold')
+    elif status_filter == 'approved':
+        players = players.filter(status='approved')
+    # 'all' shows all statuses
+    
+    # Apply category filter
+    if category_filter:
+        players = players.filter(category=category_filter)
+    
+    # Apply player type filter
+    if player_type_filter:
+        players = players.filter(user__player_type=player_type_filter)
+    
+    # Apply team filter
+    if team_filter:
+        if team_filter == 'none':
+            players = players.filter(team__isnull=True)
+        else:
+            players = players.filter(team_id=team_filter)
+    
+    # Apply search
+    if search_query:
+        players = players.filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(user__roll_number__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(team__name__icontains=search_query)
+        )
+    
+    # Order by status, then by price
+    players = players.order_by('-status', '-current_bid', 'user__first_name')
+    
+    # Pagination
+    paginator = Paginator(players, 20)  # 20 players per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Statistics
+    total_players = Player.objects.count()
+    sold_count = Player.objects.filter(status='sold').count()
+    unsold_count = Player.objects.filter(status='unsold').count()
+    approved_count = Player.objects.filter(status='approved').count()
+    pending_count = Player.objects.filter(status='pending').count()
+    
+    # Total revenue
+    total_revenue = Player.objects.filter(
+        status='sold'
+    ).exclude(
+        user__player_type='faculty'  # Exclude iconic players from revenue
+    ).aggregate(
+        total=Sum('current_bid')
+    )['total'] or 0
+    
+    # Get all teams for filter dropdown
+    teams = Team.objects.all().order_by('name')
+    
+    # Category choices
+    categories = Player.PLAYER_CATEGORIES
+    
+    # Player type choices
+    player_types = User.PLAYER_TYPES
+    
+    context = {
+        'page_obj': page_obj,
+        'total_players': total_players,
+        'sold_count': sold_count,
+        'unsold_count': unsold_count,
+        'approved_count': approved_count,
+        'pending_count': pending_count,
+        'total_revenue': total_revenue,
+        'teams': teams,
+        'categories': categories,
+        'player_types': player_types,
+        
+        # Current filters
+        'status_filter': status_filter,
+        'category_filter': category_filter,
+        'player_type_filter': player_type_filter,
+        'team_filter': team_filter,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'admin/sold_unsold_players.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.user_type in ['admin', 'auctioneer'])
+def player_detail_view(request, player_id):
+    """
+    Detailed view of a single player
+    Accessible by admin and auctioneer
+    """
+    player = get_object_or_404(Player.objects.select_related('user', 'team'), id=player_id)
+    
+    # Get bidding history for this player
+    bid_history = Bid.objects.filter(
+        player=player
+    ).select_related('team', 'auction_session').order_by('-timestamp')[:20]
+    
+    # Get auction logs for this player
+    auction_logs = AuctionLog.objects.filter(
+        player=player
+    ).select_related('winning_team', 'auction_session').order_by('-timestamp')
+    
+    # Check if player is in current auction
+    active_session = AuctionSession.objects.filter(status='live').first()
+    is_current_player = False
+    if active_session and active_session.current_player_id == player.id:
+        is_current_player = True
+    
+    context = {
+        'player': player,
+        'bid_history': bid_history,
+        'auction_logs': auction_logs,
+        'is_current_player': is_current_player,
+        'active_session': active_session,
+    }
+    
+    return render(request, 'admin/player_detail_view.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.user_type in ['admin', 'auctioneer'])
+def export_sold_unsold_report(request):
+    """
+    Export filtered sold/unsold players report
+    """
+    # Get same filters as main view
+    status_filter = request.GET.get('status', 'all')
+    category_filter = request.GET.get('category', '')
+    player_type_filter = request.GET.get('player_type', '')
+    team_filter = request.GET.get('team', '')
+    search_query = request.GET.get('search', '').strip()
+    
+    # Build queryset with same filters
+    players = Player.objects.select_related('user', 'team').all()
+    
+    if status_filter == 'sold':
+        players = players.filter(status='sold')
+    elif status_filter == 'unsold':
+        players = players.filter(status='unsold')
+    elif status_filter == 'approved':
+        players = players.filter(status='approved')
+    
+    if category_filter:
+        players = players.filter(category=category_filter)
+    
+    if player_type_filter:
+        players = players.filter(user__player_type=player_type_filter)
+    
+    if team_filter:
+        if team_filter == 'none':
+            players = players.filter(team__isnull=True)
+        else:
+            players = players.filter(team_id=team_filter)
+    
+    if search_query:
+        players = players.filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(user__roll_number__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(team__name__icontains=search_query)
+        )
+    
+    players = players.order_by('-status', '-current_bid', 'user__first_name')
+    
+    # Create CSV
+    response = HttpResponse(content_type='text/csv')
+    filename = f'players_{status_filter}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'Player Name', 'Player Type', 'Category', 'Status', 'Team', 
+        'Base Price', 'Sale Price', 'Roll Number', 'Course', 'Branch', 
+        'Year', 'Phone', 'Email', 'Batting Style', 'Bowling Style'
+    ])
+    
+    for player in players:
+        is_iconic = player.user.player_type == 'faculty'
+        writer.writerow([
+            player.user.get_full_name(),
+            f"{player.user.get_player_type_display()} {'(ICONIC)' if is_iconic else ''}" if player.user.player_type else 'N/A',
+            player.get_category_display(),
+            player.get_status_display(),
+            player.team.name if player.team else 'Unassigned',
+            player.base_price,
+            'FREE (Iconic)' if is_iconic else (player.current_bid if player.status == 'sold' else 0),
+            player.user.roll_number or 'N/A',
+            player.user.get_course_display() if player.user.course else 'N/A',
+            player.user.get_branch_display() if player.user.branch else 'N/A',
+            player.user.get_year_of_study_display() if player.user.year_of_study else 'N/A',
+            player.user.phone or 'N/A',
+            player.user.email,
+            player.batting_style or 'N/A',
+            player.bowling_style or 'N/A',
+        ])
+    
+    return response
+
+
+@login_required
+@user_passes_test(lambda u: u.user_type in ['admin', 'auctioneer'])
+def quick_stats_api(request):
+    """
+    AJAX endpoint for quick statistics
+    """
+    stats = {
+        'total': Player.objects.count(),
+        'sold': Player.objects.filter(status='sold').count(),
+        'unsold': Player.objects.filter(status='unsold').count(),
+        'approved': Player.objects.filter(status='approved').count(),
+        'pending': Player.objects.filter(status='pending').count(),
+        'iconic': Player.objects.filter(user__player_type='faculty', status='sold').count(),
+        'total_revenue': Player.objects.filter(
+            status='sold'
+        ).exclude(
+            user__player_type='faculty'
+        ).aggregate(total=Sum('current_bid'))['total'] or 0,
+    }
+    
+    # Category breakdown
+    stats['by_category'] = {
+        'batsman': Player.objects.filter(status='sold', category='batsman').count(),
+        'bowler': Player.objects.filter(status='sold', category='bowler').count(),
+        'all_rounder': Player.objects.filter(status='sold', category='all_rounder').count(),
+        'wicket_keeper': Player.objects.filter(status='sold', category='wicket_keeper').count(),
+    }
+    
+    return JsonResponse(stats)
 
 def robots_txt(request):
     """Serve robots.txt for search engines"""

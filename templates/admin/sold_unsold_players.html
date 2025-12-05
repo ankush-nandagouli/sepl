@@ -1,0 +1,435 @@
+{% extends 'base.html' %}
+
+{% block title %}Sold & Unsold Players - SEPL{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-list-check"></i> Players Management</h2>
+            <p class="text-muted">Complete list of sold, unsold, and available players</p>
+        </div>
+        <div>
+            <a href="{% url 'export_sold_unsold_report' %}?{{ request.GET.urlencode }}" class="btn btn-success">
+                <i class="bi bi-download"></i> Export Current View
+            </a>
+            {% if user.user_type == 'admin' %}
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+            {% else %}
+            <a href="{% url 'auctioneer_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h6 class="card-title">Total Players</h6>
+                    <h3 class="mb-0">{{ total_players }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h6 class="card-title">Sold</h6>
+                    <h3 class="mb-0">{{ sold_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h6 class="card-title">Unsold</h6>
+                    <h3 class="mb-0">{{ unsold_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h6 class="card-title">Approved</h6>
+                    <h3 class="mb-0">{{ approved_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h6 class="card-title">Pending</h6>
+                    <h3 class="mb-0">{{ pending_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-white bg-dark">
+                <div class="card-body">
+                    <h6 class="card-title">Total Revenue</h6>
+                    <h3 class="mb-0">₹{{ total_revenue|floatformat:0 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filters & Search</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'sold_unsold_players' %}" id="filterForm">
+                <div class="row g-3">
+                    <!-- Search -->
+                    <div class="col-md-3">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Name, Roll No, Email..." 
+                               value="{{ search_query }}">
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                            <option value="sold" {% if status_filter == 'sold' %}selected{% endif %}>Sold</option>
+                            <option value="unsold" {% if status_filter == 'unsold' %}selected{% endif %}>Unsold</option>
+                            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                        </select>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for code, name in categories %}
+                            <option value="{{ code }}" {% if category_filter == code %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Player Type Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label">Player Type</label>
+                        <select name="player_type" class="form-select">
+                            <option value="">All Types</option>
+                            {% for code, name in player_types %}
+                            <option value="{{ code }}" {% if player_type_filter == code %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Team Filter -->
+                    <div class="col-md-2">
+                        <label class="form-label">Team</label>
+                        <select name="team" class="form-select">
+                            <option value="">All Teams</option>
+                            <option value="none" {% if team_filter == 'none' %}selected{% endif %}>Unassigned</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}" {% if team_filter == team.id|stringformat:"s" %}selected{% endif %}>
+                                {{ team.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="col-md-1">
+                        <label class="form-label d-block">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Filter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Filters Display -->
+                {% if search_query or status_filter != 'all' or category_filter or player_type_filter or team_filter %}
+                <div class="mt-3">
+                    <strong>Active Filters:</strong>
+                    {% if search_query %}
+                    <span class="badge bg-info">Search: "{{ search_query }}"</span>
+                    {% endif %}
+                    {% if status_filter != 'all' %}
+                    <span class="badge bg-primary">Status: {{ status_filter|title }}</span>
+                    {% endif %}
+                    {% if category_filter %}
+                    <span class="badge bg-success">Category: {{ category_filter }}</span>
+                    {% endif %}
+                    {% if player_type_filter %}
+                    <span class="badge bg-warning text-dark">Type: {{ player_type_filter }}</span>
+                    {% endif %}
+                    {% if team_filter %}
+                    <span class="badge bg-secondary">Team Filter Active</span>
+                    {% endif %}
+                    <a href="{% url 'sold_unsold_players' %}" class="btn btn-sm btn-outline-danger ms-2">
+                        <i class="bi bi-x-circle"></i> Clear All
+                    </a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Players Table -->
+    <div class="card">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-people"></i> Players List 
+                <span class="badge bg-light text-dark">{{ page_obj.paginator.count }} results</span>
+            </h5>
+            <div>
+                <button class="btn btn-sm btn-light" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th style="width: 60px;">#</th>
+                            <th>Player Name</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Team</th>
+                            <th>Base Price</th>
+                            <th>Sale Price</th>
+                            <th>Roll Number</th>
+                            <th>Contact</th>
+                            <th style="width: 120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for player in page_obj %}
+                        <tr {% if player.status == 'sold' %}class="table-success"
+                            {% elif player.status == 'unsold' %}class="table-danger"
+                            {% elif player.status == 'approved' %}class="table-info"
+                            {% endif %}>
+                            <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if player.user.profile_picture %}
+                                    <img src="{{ player.user.profile_picture.url }}" 
+                                         alt="{{ player.user.get_full_name }}"
+                                         class="rounded-circle me-2"
+                                         style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2"
+                                         style="width: 40px; height: 40px;">
+                                        <i class="bi bi-person-fill text-white"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ player.user.get_full_name }}</strong>
+                                        {% if player.user.player_type == 'faculty' %}
+                                        <span class="badge bg-warning text-dark ms-1">ICONIC</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if player.user.player_type %}
+                                <span class="badge bg-info">{{ player.user.get_player_type_display }}</span>
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ player.get_category_display }}</span>
+                            </td>
+                            <td>
+                                {% if player.status == 'sold' %}
+                                <span class="badge bg-success">Sold</span>
+                                {% elif player.status == 'unsold' %}
+                                <span class="badge bg-danger">Unsold</span>
+                                {% elif player.status == 'approved' %}
+                                <span class="badge bg-info">Approved</span>
+                                {% elif player.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ player.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if player.team %}
+                                <strong class="text-primary">{{ player.team.name }}</strong>
+                                {% else %}
+                                <span class="text-muted">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td>₹{{ player.base_price }}</td>
+                            <td>
+                                {% if player.status == 'sold' %}
+                                    {% if player.user.player_type == 'faculty' %}
+                                    <span class="badge bg-success">FREE (Iconic)</span>
+                                    {% else %}
+                                    <strong class="text-success">₹{{ player.current_bid }}</strong>
+                                    {% endif %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ player.user.roll_number|default:"N/A" }}</small>
+                            </td>
+                            <td>
+                                <small>
+                                    <i class="bi bi-telephone"></i> {{ player.user.phone|default:"N/A" }}<br>
+                                    <i class="bi bi-envelope"></i> {{ player.user.email|truncatechars:20 }}
+                                </small>
+                            </td>
+                            <td>
+                                <a href="{% url 'player_detail_view' player.id %}" 
+                                   class="btn btn-sm btn-primary"
+                                   title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if user.user_type == 'admin' and player.team %}
+                                <button class="btn btn-sm btn-danger remove-player-btn"
+                                        data-player-id="{{ player.id }}"
+                                        data-team-id="{{ player.team.id }}"
+                                        data-player-name="{{ player.user.get_full_name }}"
+                                        title="Remove from Team">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                                <p class="mt-2">No players found matching your criteria</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1&{{ request.GET.urlencode }}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">
+                                Previous
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">
+                                Next
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&{{ request.GET.urlencode }}">
+                                Last
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                <p class="mt-2">No players found</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .btn, .card-header button, .pagination, nav {
+            display: none !important;
+        }
+        .card {
+            border: 1px solid #000 !important;
+        }
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: #f8f9fa;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit on filter change
+    document.querySelectorAll('#filterForm select').forEach(select => {
+        select.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+    });
+
+    // Remove player from team (admin only)
+    {% if user.user_type == 'admin' %}
+    document.querySelectorAll('.remove-player-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const playerId = this.getAttribute('data-player-id');
+            const teamId = this.getAttribute('data-team-id');
+            const playerName = this.getAttribute('data-player-name');
+
+            if (!confirm(`Remove ${playerName} from their team?`)) {
+                return;
+            }
+
+            // Create form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/teams/${teamId}/remove-player/${playerId}/`;
+            
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = '{{ csrf_token }}';
+            
+            form.appendChild(csrfToken);
+            document.body.appendChild(form);
+            form.submit();
+        });
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

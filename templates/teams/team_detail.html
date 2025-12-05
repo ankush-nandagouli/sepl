@@ -151,7 +151,19 @@
     <div class="row mb-4">
         <div class="col-12">
             <h4 class="mb-3">
-                <i class="bi bi-tag-fill"></i> {{ category|title|replace:"_":" " }}s ({{ category_players|length }})
+                <i class="bi bi-tag-fill"></i>
+                {% if category == 'batsman' %}
+                    Batsmen
+                {% elif category == 'bowler' %}
+                    Bowlers
+                {% elif category == 'all_rounder' %}
+                    All-Rounders
+                {% elif category == 'wicket_keeper' %}
+                    Wicket Keepers
+                {% else %}
+                    {{ category|title }}
+                {% endif %}
+                ({{ category_players|length }})
             </h4>
         </div>
 
@@ -179,21 +191,30 @@
                             </div>
                         </div>
 
-                        <p class="mb-1"><strong>Type:</strong> <span class="badge bg-info">
-                            {{ player.user.get_player_type_display|default:"N/A" }}
-                        </span></p>
+                        <p class="mb-1">
+                            <strong>Type:</strong>
+                            <span class="badge bg-info">
+                                {{ player.user.get_player_type_display|default:"N/A" }}
+                            </span>
+                        </p>
 
                         {% if player.batting_style %}
-                        <p class="mb-1"><i class="bi bi-activity"></i> <strong>Batting:</strong> {{ player.batting_style }}</p>
+                        <p class="mb-1">
+                            <i class="bi bi-activity text-primary"></i>
+                            <strong>Batting:</strong> {{ player.batting_style }}
+                        </p>
                         {% endif %}
                         {% if player.bowling_style %}
-                        <p class="mb-1"><i class="bi bi-arrow-up-circle"></i> <strong>Bowling:</strong> {{ player.bowling_style }}</p>
+                        <p class="mb-1">
+                            <i class="bi bi-arrow-up-circle text-success"></i>
+                            <strong>Bowling:</strong> {{ player.bowling_style }}
+                        </p>
                         {% endif %}
 
                         <hr>
                         <div class="text-center">
                             <small class="text-muted">Bought for</small>
-                            <h4 class="text-success">₹{{ player.current_bid }}</h4>
+                            <h4 class="text-success mb-0">₹{{ player.current_bid }}</h4>
                         </div>
 
                     </div>
@@ -221,18 +242,23 @@
 
 </div>
 
-<!-- Hover effect styles -->
 <style>
 .player-card {
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     border: none;
 }
 .player-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15)!important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
 }
-.progress { border-radius: 12px; }
-.price-tag { background: #f8f9fa; padding: 10px; border-radius: 10px; }
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+.price-tag {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
 </style>
-
 {% endblock %}
