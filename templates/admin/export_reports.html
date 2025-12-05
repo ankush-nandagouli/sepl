@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block title %}Export Reports - SEPL Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-file-earmark-spreadsheet"></i> Export Reports</h2>
+            <p class="text-muted">Download comprehensive tournament data in CSV format</p>
+        </div>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Teams</h6>
+                    <h3 class="mb-0">{{ total_teams }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Players</h6>
+                    <h3 class="mb-0">{{ total_players }}</h3>
+                    <small>{{ sold_players }} sold</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6 class="card-title">Iconic Players</h6>
+                    <h3 class="mb-0">{{ iconic_players }}</h3>
+                    <small>Faculty members</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Purse Spent</h6>
+                    <h3 class="mb-0">₹{{ total_purse_spent|floatformat:0 }}</h3>
+                    <small>of ₹{{ total_purse_distributed|floatformat:0 }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="row">
+        <!-- Teams Report -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-people-fill"></i> Teams Report</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Complete team information including:
+                    </p>
+                    <ul>
+                        <li>Team name and owner details</li>
+                        <li>Financial summary (purse spent/remaining)</li>
+                        <li>Total players, regular and iconic breakdown</li>
+                        <li>Squad capacity and slots remaining</li>
+                    </ul>
+                    <a href="{% url 'export_teams_report' %}" class="btn btn-primary w-100">
+                        <i class="bi bi-download"></i> Download Teams Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Players Report -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-badge"></i> Players Report</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Complete player database including:
+                    </p>
+                    <ul>
+                        <li>Player details and category</li>
+                        <li>Student/Faculty status</li>
+                        <li>Team assignment and prices</li>
+                        <li>Academic details (course, branch, year)</li>
+                        <li>Contact information</li>
+                    </ul>
+                    <a href="{% url 'export_players_report' %}" class="btn btn-success w-100">
+                        <i class="bi bi-download"></i> Download Players Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Squads Report -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Team Squads</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Detailed team-wise player breakdown:
+                    </p>
+                    <ul>
+                        <li>All players organized by team</li>
+                        <li>Player categories and prices</li>
+                        <li>Batting and bowling styles</li>
+                        <li>Iconic player identification</li>
+                        <li>Academic and contact details</li>
+                    </ul>
+                    <a href="{% url 'export_team_squads' %}" class="btn btn-warning w-100">
+                        <i class="bi bi-download"></i> Download Team Squads
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auction Logs -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Auction Logs</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Complete auction history including:
+                    </p>
+                    <ul>
+                        <li>All auction transactions</li>
+                        <li>Player sale/unsold status</li>
+                        <li>Final bid amounts</li>
+                        <li>Timestamps and session details</li>
+                    </ul>
+                    
+                    <!-- Filter by session -->
+                    <div class="mb-3">
+                        <label class="form-label">Filter by Session (optional):</label>
+                        <select class="form-select" id="sessionSelect">
+                            <option value="">All Sessions</option>
+                            {% for session in auction_sessions %}
+                            <option value="{{ session.id }}">{{ session.name }} - {{ session.get_status_display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-info w-100" id="downloadAuctionLogs">
+                        <i class="bi bi-download"></i> Download Auction Logs
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Export Options -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Custom Export Options</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h6>Export Formats</h6>
+                    <p class="text-muted">All reports are exported in CSV format for easy analysis in Excel, Google Sheets, or any spreadsheet software.</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6>Data Freshness</h6>
+                    <p class="text-muted">Reports are generated in real-time with the latest tournament data at the moment of export.</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6>File Naming</h6>
+                    <p class="text-muted">Files are automatically named with timestamps for easy organization and version tracking.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Quick Statistics</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h4>{{ total_teams }}</h4>
+                    <p class="text-muted">Active Teams</p>
+                </div>
+                <div class="col-md-3">
+                    <h4>{{ sold_players }}</h4>
+                    <p class="text-muted">Players Sold</p>
+                </div>
+                <div class="col-md-3">
+                    <h4>{{ iconic_players }}</h4>
+                    <p class="text-muted">Iconic Players</p>
+                </div>
+                <div class="col-md-3">
+                    <h4>{{ auction_sessions.count }}</h4>
+                    <p class="text-muted">Auction Sessions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle auction logs download with session filter
+    document.getElementById('downloadAuctionLogs').addEventListener('click', function() {
+        const sessionId = document.getElementById('sessionSelect').value;
+        let url = '{% url "export_auction_logs" %}';
+        if (sessionId) {
+            url += `?session_id=${sessionId}`;
+        }
+        window.location.href = url;
+    });
+});
+</script>
+{% endblock %}

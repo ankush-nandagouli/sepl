@@ -49,7 +49,21 @@ urlpatterns = [
     path('admin/auction/<int:session_id>/end/', views.end_auction_session, name='end_auction_session'),
     path('admin/auction/control/', views.auction_control, name='auction_control'),
     
+    # ========================================
+    # ICONIC PLAYER MANAGEMENT (NEW)
+    # ========================================
+    path('admin/iconic-players/', views.manage_iconic_players, name='manage_iconic_players'),
+    path('admin/iconic-players/assign/', views.assign_iconic_player, name='assign_iconic_player'),
+    path('admin/iconic-players/remove/', views.remove_iconic_player, name='remove_iconic_player'),
     
+    # ========================================
+    # REPORTS & EXPORTS (NEW)
+    # ========================================
+    path('admin/reports/', views.export_reports, name='export_reports'),
+    path('admin/reports/teams/', views.export_teams_report, name='export_teams_report'),
+    path('admin/reports/players/', views.export_players_report, name='export_players_report'),
+    path('admin/reports/auction-logs/', views.export_auction_logs, name='export_auction_logs'),
+    path('admin/reports/team-squads/', views.export_team_squads, name='export_team_squads'),
     # User Management URLs
     path('admin/users/', views.manage_users, name='manage_users'),
     path('admin/users/<int:user_id>/', views.user_detail, name='user_detail'),

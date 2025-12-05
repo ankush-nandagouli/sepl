@@ -1,243 +1,148 @@
 {% extends 'base.html' %}
 
-{% block title %}Manage Iconic Players - Admin | SEPL{% endblock %}
+{% block title %}Manage Iconic Players - SEPL Admin{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2><i class="bi bi-star-fill text-warning"></i> Manage Iconic Players (Faculty)</h2>
-            <p class="text-muted">Assign up to 2 faculty members per team as iconic players - free assignment, reduces squad size</p>
+            <h2><i class="bi bi-star-fill text-warning"></i> Manage Iconic Players</h2>
+            <p class="text-muted">Assign up to 2 faculty members as iconic players per team (free, reduce squad size)</p>
         </div>
-        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Back to Dashboard
         </a>
     </div>
 
-    <!-- Statistics Overview -->
+    <!-- Statistics -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total Faculty</h5>
-                    <h2 class="mb-0">{{ total_faculty }}</h2>
-                    <small>Approved faculty players</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Assigned</h5>
-                    <h2 class="mb-0">{{ assigned_faculty }}</h2>
-                    <small>Currently iconic players</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Available</h5>
-                    <h2 class="mb-0">{{ available_iconic.count }}</h2>
-                    <small>Ready to assign</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card bg-warning text-dark">
                 <div class="card-body">
-                    <h5 class="card-title">Teams</h5>
-                    <h2 class="mb-0">{{ teams.count }}</h2>
-                    <small>Max 2 iconic per team</small>
+                    <h6 class="card-title">Total Iconic Players</h6>
+                    <h3 class="mb-0">{{ total_iconic_players }}</h3>
+                    <small>Faculty players available</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Assigned Iconic Players</h6>
+                    <h3 class="mb-0">
+                        {% with assigned=iconic_players|filter:status='sold'|length %}
+                        {{ assigned }}
+                        {% endwith %}
+                    </h3>
+                    <small>Currently assigned to teams</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Available Iconic Players</h6>
+                    <h3 class="mb-0">
+                        {% with available=iconic_players|filter:status='approved'|length %}
+                        {{ available }}
+                        {% endwith %}
+                    </h3>
+                    <small>Ready to be assigned</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Assignment Section -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Quick Assign Iconic Player</h5>
-        </div>
-        <div class="card-body">
-            <form id="quick-assign-form">
-                {% csrf_token %}
-                <div class="row align-items-end">
-                    <div class="col-md-5">
-                        <label for="player-select" class="form-label">Select Faculty Player</label>
-                        <select id="player-select" class="form-select" required>
-                            <option value="">-- Choose a faculty member --</option>
-                            {% for player in available_iconic %}
-                            <option value="{{ player.id }}" 
-                                    data-name="{{ player.user.get_full_name }}"
-                                    data-category="{{ player.get_category_display }}"
-                                    data-branch="{{ player.user.get_branch_display }}">
-                                {{ player.user.get_full_name }} - {{ player.get_category_display }}
-                                {% if player.user.branch %} ({{ player.user.get_branch_display }}){% endif %}
-                            </option>
+    <!-- Teams and Their Iconic Players -->
+    <div class="row">
+        {% for data in team_data %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 {% if data.iconic_count >= 2 %}border-success{% endif %}">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-shield-fill"></i> {{ data.team.name }}
+                    </h5>
+                    <span class="badge bg-light text-dark">
+                        {{ data.iconic_count }}/2 Iconic
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Owner:</strong> {{ data.team.owner.get_full_name }}<br>
+                        <strong>Squad:</strong> {{ data.team.players.count }}/{{ data.team.max_players }}
+                    </p>
+
+                    <hr>
+
+                    <!-- Current Iconic Players -->
+                    <h6 class="text-warning"><i class="bi bi-star-fill"></i> Iconic Players:</h6>
+                    {% if data.iconic_players %}
+                    <ul class="list-group mb-3">
+                        {% for player in data.iconic_players %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ player.user.get_full_name }}</strong><br>
+                                <small class="text-muted">{{ player.get_category_display }}</small>
+                            </div>
+                            <button class="btn btn-sm btn-danger remove-iconic-btn" 
+                                    data-player-id="{{ player.id }}"
+                                    data-player-name="{{ player.user.get_full_name }}"
+                                    data-team-id="{{ data.team.id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted fst-italic">No iconic players assigned yet</p>
+                    {% endif %}
+
+                    <!-- Add Iconic Player -->
+                    {% if data.can_add_more %}
+                    <div class="mt-3">
+                        <label class="form-label">Add Iconic Player:</label>
+                        <select class="form-select iconic-player-select" data-team-id="{{ data.team.id }}">
+                            <option value="">-- Select Faculty Player --</option>
+                            {% for player in iconic_players %}
+                                {% if not player.team or player.team.id == data.team.id %}
+                                <option value="{{ player.id }}" 
+                                        {% if player.team %}disabled{% endif %}>
+                                    {{ player.user.get_full_name }} - {{ player.get_category_display }}
+                                    {% if player.team %}(Assigned){% endif %}
+                                </option>
+                                {% endif %}
                             {% endfor %}
                         </select>
-                    </div>
-                    <div class="col-md-5">
-                        <label for="team-select" class="form-label">Assign to Team</label>
-                        <select id="team-select" class="form-select" required>
-                            <option value="">-- Choose a team --</option>
-                            {% for team in teams %}
-                            <option value="{{ team.id }}" 
-                                    data-iconic-count="{{ team.iconic_count }}"
-                                    {% if team.iconic_count >= 2 %}disabled{% endif %}>
-                                {{ team.name }} 
-                                ({{ team.iconic_count }}/2 iconic players)
-                                {% if team.iconic_count >= 2 %}[FULL]{% endif %}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-check-circle"></i> Assign
+                        <button class="btn btn-success btn-sm mt-2 w-100 assign-iconic-btn" 
+                                data-team-id="{{ data.team.id }}">
+                            <i class="bi bi-plus-circle"></i> Assign as Iconic Player
                         </button>
                     </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Current Iconic Assignments -->
-    <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="bi bi-list-check"></i> Current Iconic Players ({{ assigned_faculty }})</h5>
-        </div>
-        <div class="card-body">
-            {% if iconic_assignments %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Player Name</th>
-                            <th>Category</th>
-                            <th>Branch</th>
-                            <th>Team</th>
-                            <th>Assigned On</th>
-                            <th>Team Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for player in iconic_assignments %}
-                        <tr data-player-id="{{ player.id }}">
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if player.user.profile_picture %}
-                                    <img src="{{ player.user.profile_picture.url }}" 
-                                         alt="{{ player.user.get_full_name }}"
-                                         class="rounded-circle me-2"
-                                         style="width: 40px; height: 40px; object-fit: cover;">
-                                    {% else %}
-                                    <div class="rounded-circle bg-secondary text-white me-2 d-flex align-items-center justify-content-center"
-                                         style="width: 40px; height: 40px;">
-                                        <i class="bi bi-person"></i>
-                                    </div>
-                                    {% endif %}
-                                    <strong>{{ player.user.get_full_name }}</strong>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge bg-info">{{ player.get_category_display }}</span>
-                            </td>
-                            <td>{{ player.user.get_branch_display|default:"N/A" }}</td>
-                            <td>
-                                <strong>{{ player.team.name }}</strong>
-                            </td>
-                            <td>{{ player.assigned_at|date:"M d, Y H:i" }}</td>
-                            <td>
-                                <small class="text-muted">
-                                    {{ player.team.iconic_players_count }}/2 iconic<br>
-                                    Effective slots: {{ player.team.effective_max_players }}
-                                </small>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-danger remove-iconic-btn" 
-                                        data-player-id="{{ player.id }}"
-                                        data-player-name="{{ player.user.get_full_name }}"
-                                        data-team-name="{{ player.team.name }}">
-                                    <i class="bi bi-x-circle"></i> Remove
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> No iconic players assigned yet.
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Available Faculty Players -->
-    <div class="card">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="bi bi-people"></i> Available Faculty Players ({{ available_iconic.count }})</h5>
-        </div>
-        <div class="card-body">
-            {% if available_iconic %}
-            <div class="row">
-                {% for player in available_iconic %}
-                <div class="col-md-4 mb-3">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-2">
-                                {% if player.user.profile_picture %}
-                                <img src="{{ player.user.profile_picture.url }}" 
-                                     alt="{{ player.user.get_full_name }}"
-                                     class="rounded-circle me-3"
-                                     style="width: 60px; height: 60px; object-fit: cover;">
-                                {% else %}
-                                <div class="rounded-circle bg-secondary text-white me-3 d-flex align-items-center justify-content-center"
-                                     style="width: 60px; height: 60px; font-size: 1.5rem;">
-                                    <i class="bi bi-person"></i>
-                                </div>
-                                {% endif %}
-                                <div>
-                                    <h6 class="mb-0">{{ player.user.get_full_name }}</h6>
-                                    <small class="text-muted">{{ player.user.get_branch_display|default:"Faculty" }}</small>
-                                </div>
-                            </div>
-                            <hr>
-                            <p class="mb-1"><strong>Category:</strong> <span class="badge bg-info">{{ player.get_category_display }}</span></p>
-                            <p class="mb-2">
-                                <strong>Skills:</strong><br>
-                                <small>
-                                    {% if player.batting_style %}🏏 {{ player.batting_style }}<br>{% endif %}
-                                    {% if player.bowling_style %}⚾ {{ player.bowling_style }}{% endif %}
-                                </small>
-                            </p>
-                        </div>
+                    {% else %}
+                    <div class="alert alert-success mt-3">
+                        <i class="bi bi-check-circle"></i> Maximum iconic players assigned
                     </div>
+                    {% endif %}
                 </div>
-                {% endfor %}
             </div>
-            {% else %}
-            <div class="alert alert-warning">
-                <i class="bi bi-exclamation-triangle"></i> No faculty players available for assignment. 
-                All faculty members have either been assigned or are not approved yet.
-            </div>
-            {% endif %}
         </div>
+        {% endfor %}
     </div>
 </div>
 
-<!-- Toast notification -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div id="notification-toast" class="toast" role="alert">
-        <div class="toast-header">
-            <strong class="me-auto" id="toast-title">Notification</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle"></i> Success</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="successMessage"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+            </div>
         </div>
-        <div class="toast-body" id="toast-message"></div>
     </div>
 </div>
 
@@ -246,77 +151,75 @@
         transition: transform 0.2s;
     }
     .card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-5px);
     }
-    .remove-iconic-btn:hover {
-        transform: scale(1.05);
+    .list-group-item {
+        transition: background-color 0.2s;
+    }
+    .list-group-item:hover {
+        background-color: #f8f9fa;
     }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const quickAssignForm = document.getElementById('quick-assign-form');
-    const toastEl = document.getElementById('notification-toast');
-    const toast = new bootstrap.Toast(toastEl);
-    
-    function showToast(title, message, isSuccess = true) {
-        document.getElementById('toast-title').textContent = title;
-        document.getElementById('toast-message').textContent = message;
-        toastEl.className = `toast ${isSuccess ? 'bg-success' : 'bg-danger'} text-white`;
-        toast.show();
-    }
-    
-    // Quick assign form
-    quickAssignForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const playerId = document.getElementById('player-select').value;
-        const teamId = document.getElementById('team-select').value;
-        
-        if (!playerId || !teamId) {
-            showToast('Error', 'Please select both player and team', false);
-            return;
-        }
-        
-        const formData = new FormData();
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-        formData.append('player_id', playerId);
-        formData.append('team_id', teamId);
-        
-        fetch('{% url "assign_iconic_player" %}', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Success', data.message, true);
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showToast('Error', data.message, false);
-            }
-        })
-        .catch(error => {
-            showToast('Error', 'Network error occurred', false);
-            console.error('Error:', error);
-        });
-    });
-    
-    // Remove iconic player
-    document.querySelectorAll('.remove-iconic-btn').forEach(btn => {
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+
+    // Assign Iconic Player
+    document.querySelectorAll('.assign-iconic-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const playerId = this.dataset.playerId;
-            const playerName = this.dataset.playerName;
-            const teamName = this.dataset.teamName;
-            
-            if (!confirm(`Remove ${playerName} from ${teamName}?`)) {
+            const teamId = this.getAttribute('data-team-id');
+            const selectElement = document.querySelector(`.iconic-player-select[data-team-id="${teamId}"]`);
+            const playerId = selectElement.value;
+
+            if (!playerId) {
+                alert('Please select a player first');
                 return;
             }
-            
+
+            if (!confirm('Are you sure you want to assign this player as an iconic player?')) {
+                return;
+            }
+
             const formData = new FormData();
-            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            formData.append('team_id', teamId);
             formData.append('player_id', playerId);
-            
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            fetch('{% url "assign_iconic_player" %}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('successMessage').textContent = data.message;
+                    successModal.show();
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Network error: ' + error);
+            });
+        });
+    });
+
+    // Remove Iconic Player
+    document.querySelectorAll('.remove-iconic-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const playerId = this.getAttribute('data-player-id');
+            const playerName = this.getAttribute('data-player-name');
+
+            if (!confirm(`Remove ${playerName} from iconic player status?`)) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('player_id', playerId);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
             fetch('{% url "remove_iconic_player" %}', {
                 method: 'POST',
                 body: formData
@@ -324,15 +227,15 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast('Success', data.message, true);
-                    setTimeout(() => location.reload(), 1500);
+                    document.getElementById('successMessage').textContent = data.message;
+                    successModal.show();
+                    setTimeout(() => window.location.reload(), 1500);
                 } else {
-                    showToast('Error', data.message, false);
+                    alert('Error: ' + data.message);
                 }
             })
             .catch(error => {
-                showToast('Error', 'Network error occurred', false);
-                console.error('Error:', error);
+                alert('Network error: ' + error);
             });
         });
     });
