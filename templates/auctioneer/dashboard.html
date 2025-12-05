@@ -5,246 +5,137 @@
 
 {% block extra_css %}
 <style>
-    body { 
-        background: #1a1a2e;
-        color: #eee;
-    }
-    
-    .control-panel {
-        background: #16213e;
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-    }
-    
-    .current-player-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
-        padding: 30px;
-        color: white;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .current-player-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.1)"/></svg>');
-        background-size: 100px;
-        opacity: 0.3;
-        animation: pulse 3s infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 0.3; }
-        50% { opacity: 0.5; }
-    }
-    
-    .player-photo {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        border: 5px solid white;
-        object-fit: cover;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-    }
-    
-    .bid-amount {
-        font-size: 3rem;
-        font-weight: bold;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    .team-card {
-        background: #0f3460;
-        border-radius: 15px;
-        padding: 15px;
-        margin-bottom: 10px;
-        transition: all 0.3s;
-        cursor: pointer;
-        border: 3px solid transparent;
-        position: relative;
-    }
-    
-    .team-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        border-color: #f59e0b;
-    }
-    
-    .team-card.can-bid {
-        border-color: #10b981;
-        background: linear-gradient(135deg, #0f3460 0%, #134e4a 100%);
-    }
-    
-    .team-card.cannot-bid {
-        opacity: 0.5;
-        border-color: #ef4444;
-        cursor: not-allowed;
-    }
-    
-    .team-card.last-bidder {
-        border-color: #f59e0b;
-        box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
-    }
-    
-    .quick-bid-btn {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        border: none;
-        color: white;
-        padding: 12px 25px;
-        border-radius: 10px;
-        font-weight: bold;
-        font-size: 1.1rem;
-        transition: all 0.3s;
-        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
-    }
-    
-    .quick-bid-btn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
-    }
-    
-    .quick-bid-btn:active {
-        transform: scale(0.95);
-    }
-    
-    .control-btn {
-        padding: 15px 30px;
-        border-radius: 10px;
-        font-weight: bold;
-        border: none;
-        transition: all 0.3s;
-        margin: 5px;
-    }
-    
-    .control-btn.going {
-        background: #f59e0b;
-        color: white;
-        animation: pulse-button 1s infinite;
-    }
-    
-    @keyframes pulse-button {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-    }
-    
-    .control-btn.sold {
-        background: #ef4444;
-        color: white;
-    }
-    
-    .control-btn.unsold {
-        background: #6b7280;
-        color: white;
-    }
-    
-    .control-btn:disabled {
-        background: #374151 !important;
-        cursor: not-allowed;
-        opacity: 0.5;
-        animation: none !important;
-    }
-    
-    .player-queue-item {
-        background: #0f3460;
-        padding: 10px 15px;
-        border-radius: 10px;
-        margin-bottom: 8px;
-        cursor: pointer;
-        transition: all 0.3s;
-        border-left: 4px solid transparent;
-    }
-    
-    .player-queue-item:hover {
-        background: #1e4a7a;
-        border-left-color: #f59e0b;
-        transform: translateX(5px);
-    }
-    
-    .bid-history-item {
-        background: rgba(255,255,255,0.1);
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        border-left: 4px solid #10b981;
-    }
-    
-    .stats-badge {
-        background: rgba(255,255,255,0.2);
-        padding: 5px 15px;
-        border-radius: 20px;
-        display: inline-block;
-        margin: 5px;
-        font-size: 0.9rem;
-    }
-    
-    .notification-toast {
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        z-index: 9999;
-        min-width: 300px;
-    }
-    
-    .shortcuts-bar {
-        background: rgba(0,0,0,0.8);
-        padding: 10px;
-        border-radius: 10px;
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        font-size: 0.85rem;
-    }
-    
-    .shortcut-key {
-        background: #4b5563;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-family: monospace;
-        margin: 0 3px;
-    }
-    
-    .live-indicator {
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        background: #ef4444;
-        border-radius: 50%;
-        animation: blink 1s infinite;
-        margin-right: 8px;
-    }
-    
-    @keyframes blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
-    }
-    
-    .content-wrapper {
-        background: transparent !important;
-        box-shadow: none !important;
-    }
-    
-    .search-box {
-        background: #0f3460;
-        border: 2px solid #1e4a7a;
-        color: white;
-        border-radius: 10px;
-        padding: 10px 15px;
-    }
-    
-    .search-box:focus {
-        border-color: #f59e0b;
-        outline: none;
-        box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-    }
+/* Wrapper Background */
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: #111;
+}
+
+/* Card Style */
+.control-panel, .current-player-card {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    padding: 25px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    margin-bottom: 25px;
+}
+
+/* Current Player Card */
+.current-player-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(245,245,255,0.85));
+    border-left: 6px solid var(--accent-color);
+}
+
+.player-photo {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: 6px solid var(--secondary-color);
+    object-fit: cover;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+/* Stats Badge */
+.stats-badge {
+    background: var(--secondary-color);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    margin: 3px;
+}
+
+/* Team Cards */
+.team-card {
+    background: rgba(255,255,255,0.85);
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-left: 4px solid transparent;
+    transition: all 0.3s;
+}
+
+.team-card.can-bid { border-left-color: #10b981; }
+.team-card.cannot-bid { opacity: 0.45; }
+
+.team-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* Quick Bid Button */
+.quick-bid-btn {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-weight: 600;
+    box-shadow: 0 8px 20px rgba(59,130,246,0.4);
+}
+.quick-bid-btn:hover {
+    background: var(--primary-color);
+    transform: scale(1.05);
+}
+
+/* Control Buttons */
+.control-btn {
+    background: var(--accent-color);
+    color: white;
+    padding: 18px 32px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+.control-btn.sold { background: #ef4444; }
+.control-btn.unsold { background: #6b7280; }
+
+/* Bid history */
+.bid-history-item {
+    background: rgba(0,0,0,0.05);
+    padding: 12px;
+    border-radius: 10px;
+    border-left: 4px solid var(--secondary-color);
+}
+
+/* Player Queue */
+.player-queue-item {
+    background: rgba(255,255,255,0.8);
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    transition: 0.25s;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+}
+.player-queue-item:hover {
+    border-left-color: var(--accent-color);
+    transform: translateX(6px);
+}
+
+/* Toast Notifications */
+.notification-toast .alert {
+    backdrop-filter: blur(10px);
+    background: rgba(0,0,0,0.7);
+    color: white;
+}
+
+/* Shortcuts Bar */
+.shortcuts-bar {
+    background: rgba(255,255,255,0.8);
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+.shortcut-key {
+    background: #111;
+    color: white;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
 </style>
 {% endblock %}
+
 
 {% block content %}
 <div class="notification-toast" id="toastContainer"></div>

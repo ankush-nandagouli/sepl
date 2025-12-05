@@ -396,6 +396,12 @@
               </a>
             </li>
 
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'teams_list' %}">
+                <i class="bi bi-people-fill" aria-hidden="true"></i> Teams
+              </a>
+            </li>
+
             {% if user.is_authenticated %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'dashboard' %}">

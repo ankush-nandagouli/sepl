@@ -1759,6 +1759,9 @@ def manage_iconic_players(request):
         status__in=['approved', 'sold']  # Include both available and already assigned
     ).select_related('user', 'team').order_by('user__first_name')
     
+    assigned_iconic_players = iconic_players.filter(status='sold')
+    available_iconic_players = iconic_players.filter(status='approved')
+
     # Build team data with their iconic players
     team_data = []
     for team in teams:
@@ -1776,6 +1779,8 @@ def manage_iconic_players(request):
         'team_data': team_data,
         'iconic_players': iconic_players,
         'total_iconic_players': iconic_players.count(),
+        'assigned_iconic_count': assigned_iconic_players.count(),
+        'available_iconic_count': available_iconic_players.count(),
     }
     return render(request, 'admin/manage_iconic_players.html', context)
 

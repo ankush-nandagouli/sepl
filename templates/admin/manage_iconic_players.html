@@ -14,44 +14,38 @@
         </a>
     </div>
 
-    <!-- Statistics -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <h6 class="card-title">Total Iconic Players</h6>
-                    <h3 class="mb-0">{{ total_iconic_players }}</h3>
-                    <small>Faculty players available</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Assigned Iconic Players</h6>
-                    <h3 class="mb-0">
-                        {% with assigned=iconic_players|filter:status='sold'|length %}
-                        {{ assigned }}
-                        {% endwith %}
-                    </h3>
-                    <small>Currently assigned to teams</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Available Iconic Players</h6>
-                    <h3 class="mb-0">
-                        {% with available=iconic_players|filter:status='approved'|length %}
-                        {{ available }}
-                        {% endwith %}
-                    </h3>
-                    <small>Ready to be assigned</small>
-                </div>
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <h6 class="card-title">Total Iconic Players</h6>
+                <h3 class="mb-0">{{ total_iconic_players }}</h3>
+                <small>Faculty players available</small>
             </div>
         </div>
     </div>
+
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6 class="card-title">Assigned Iconic Players</h6>
+                <h3 class="mb-0">{{ assigned_iconic_count }}</h3>
+                <small>Currently assigned to teams</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h6 class="card-title">Available Iconic Players</h6>
+                <h3 class="mb-0">{{ available_iconic_count }}</h3>
+                <small>Ready to be assigned</small>
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- Teams and Their Iconic Players -->
     <div class="row">
