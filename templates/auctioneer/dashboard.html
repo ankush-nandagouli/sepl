@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 
 {% block title %}Auctioneer Control Panel - SEPL{% endblock %}
@@ -46,22 +45,47 @@ body {
     margin: 3px;
 }
 
-/* Team Cards */
+/* Team Cards - FIXED */
 .team-card {
-    background: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.95); /* Increased opacity */
     border-radius: 15px;
     padding: 15px;
     margin-bottom: 12px;
     border-left: 4px solid transparent;
     transition: all 0.3s;
+    cursor: pointer;
 }
 
-.team-card.can-bid { border-left-color: #10b981; }
-.team-card.cannot-bid { opacity: 0.45; }
+.team-card.can-bid { 
+    border-left-color: #10b981;
+    background: rgba(255,255,255,0.98);
+}
+
+.team-card.cannot-bid { 
+    opacity: 0.6;
+    background: rgba(240,240,240,0.8);
+}
+
+.team-card.last-bidder {
+    border-left-color: #f59e0b;
+    background: rgba(255,250,240,0.98);
+    box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+}
 
 .team-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* Team Name - FIXED to be visible */
+.team-card h6 {
+    color: #1f2937 !important; /* Dark gray for visibility */
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.team-card .text-muted {
+    color: #6b7280 !important;
 }
 
 /* Quick Bid Button */
@@ -73,6 +97,7 @@ body {
     border-radius: 10px;
     font-weight: 600;
     box-shadow: 0 8px 20px rgba(59,130,246,0.4);
+    transition: all 0.2s;
 }
 .quick-bid-btn:hover {
     background: var(--primary-color);
@@ -86,7 +111,14 @@ body {
     padding: 18px 32px;
     border-radius: 12px;
     font-weight: 700;
+    margin: 5px;
+    border: none;
+    transition: all 0.2s;
 }
+.control-btn:hover {
+    transform: scale(1.05);
+}
+.control-btn.going { background: #3b82f6; }
 .control-btn.sold { background: #ef4444; }
 .control-btn.unsold { background: #6b7280; }
 
@@ -96,11 +128,12 @@ body {
     padding: 12px;
     border-radius: 10px;
     border-left: 4px solid var(--secondary-color);
+    margin-bottom: 8px;
 }
 
 /* Player Queue */
 .player-queue-item {
-    background: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.9);
     padding: 12px 16px;
     border-radius: 12px;
     margin-bottom: 10px;
@@ -111,27 +144,50 @@ body {
 .player-queue-item:hover {
     border-left-color: var(--accent-color);
     transform: translateX(6px);
+    background: rgba(255,255,255,1);
 }
 
 /* Toast Notifications */
+.notification-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+}
 .notification-toast .alert {
     backdrop-filter: blur(10px);
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.8);
     color: white;
+    border: none;
 }
 
 /* Shortcuts Bar */
 .shortcuts-bar {
-    background: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.9);
     padding: 12px;
     border-radius: 12px;
     box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
 }
 .shortcut-key {
     background: #111;
     color: white;
     border-radius: 4px;
     padding: 2px 8px;
+    margin: 0 3px;
+    font-family: monospace;
+}
+
+/* Bid Amount Display */
+.bid-amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #059669;
 }
 </style>
 {% endblock %}
@@ -143,7 +199,7 @@ body {
 <!-- Header with Live Status -->
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="text-white">
-        <span class="live-indicator"></span>
+        <span class="badge bg-danger">LIVE</span>
         <i class="bi bi-hammer"></i> Auctioneer Control Panel
     </h2>
     <div>
@@ -169,7 +225,7 @@ body {
                     {% endif %}
                 </div>
                 <div class="col-md-9">
-                    <h2 class="mb-2" id="playerName">{{ current_player.user.get_full_name }}</h2>
+                    <h2 class="mb-2 text-dark" id="playerName">{{ current_player.user.get_full_name }}</h2>
                     <div class="mb-3">
                         <span class="stats-badge">
                             <i class="bi bi-trophy"></i> {{ current_player.get_category_display }}
@@ -186,13 +242,13 @@ body {
                     
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <div class="mb-2">Current Bid</div>
+                            <div class="mb-2 text-muted">Current Bid</div>
                             <div class="bid-amount" id="currentBid">
                                 ₹<span id="currentBidAmount">{{ current_player.current_bid|default:current_player.base_price }}</span>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-2">Next Bid</div>
+                            <div class="mb-2 text-muted">Next Bid</div>
                             <div class="bid-amount text-warning" id="nextBid">
                                 ₹<span id="nextBidAmount">{% if current_player.current_bid == 0 %}{{ current_player.base_price }}{% else %}{% if current_player.current_bid < 700 %}{{ current_player.current_bid|add:50 }}{% else %}{{ current_player.current_bid|add:100 }}{% endif %}{% endif %}</span>
                             </div>
@@ -200,8 +256,9 @@ body {
                     </div>
                     
                     {% if session.last_bid_team %}
-                    <div class="mt-3 p-3 bg-dark rounded">
-                        <strong>Last Bid:</strong> {{ session.last_bid_team.name }}
+                    <div class="mt-3 p-3 bg-warning bg-opacity-25 rounded border border-warning">
+                        <strong class="text-dark">Last Bid:</strong> 
+                        <span class="text-dark fw-bold">{{ session.last_bid_team.name }}</span>
                     </div>
                     {% endif %}
                 </div>
@@ -210,7 +267,7 @@ body {
         
         <!-- Control Buttons -->
         <div class="control-panel text-center">
-            <h5 class="text-white mb-3">Auction Controls</h5>
+            <h5 class="text-dark mb-3"><i class="bi bi-controller"></i> Auction Controls</h5>
             <button class="control-btn going btn-lg" id="goingBtn" onclick="callGoing()">
                 <i class="bi bi-megaphone"></i> Going... (Space)
             </button>
@@ -225,7 +282,7 @@ body {
         
         <!-- Bid History -->
         <div class="control-panel mt-4">
-            <h5 class="text-white mb-3">
+            <h5 class="text-dark mb-3">
                 <i class="bi bi-clock-history"></i> Bid History
             </h5>
             <div id="bidHistory">
@@ -233,15 +290,15 @@ body {
                 <div class="bid-history-item">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>{{ bid.team.name }}</strong>
+                            <strong class="text-dark">{{ bid.team.name }}</strong>
                             <small class="ms-2 text-muted">{{ bid.timestamp|date:"H:i:s" }}</small>
                         </div>
-                        <div class="fs-5 text-warning">₹{{ bid.amount }}</div>
+                        <div class="fs-5 text-warning fw-bold">₹{{ bid.amount }}</div>
                     </div>
                 </div>
                 {% empty %}
                 <div class="text-center text-muted py-3">
-                    No bids yet for this player
+                    <i class="bi bi-hourglass-split"></i> No bids yet for this player
                 </div>
                 {% endfor %}
             </div>
@@ -251,7 +308,7 @@ body {
         <!-- No Current Player -->
         <div class="control-panel text-center py-5">
             <i class="bi bi-hourglass-split" style="font-size: 4rem; color: #6b7280;"></i>
-            <h3 class="mt-3 text-muted">No Player Selected</h3>
+            <h3 class="mt-3 text-dark">No Player Selected</h3>
             <p class="text-muted">Select a player from the queue to start bidding</p>
         </div>
         {% endif %}
@@ -259,33 +316,36 @@ body {
     
     <!-- Right Column: Teams & Player Queue -->
     <div class="col-lg-4">
-        <!-- Teams Section -->
+        <!-- Teams Section - FIXED -->
         <div class="control-panel mb-4">
-            <h5 class="text-white mb-3">
-                <i class="bi bi-people-fill"></i> Teams
+            <h5 class="text-dark mb-3">
+                <i class="bi bi-people-fill"></i> Teams ({{ total_teams }})
                 <small class="float-end text-muted" style="font-size: 0.8rem;">Click to bid</small>
             </h5>
-            <div id="teamsContainer" style="max-height: 400px; overflow-y: auto;">
+            <div id="teamsContainer" style="max-height: 450px; overflow-y: auto;">
                 {% for stat in team_stats %}
                 <div class="team-card {% if stat.can_bid %}can-bid{% else %}cannot-bid{% endif %} {% if current_player and session.last_bid_team and session.last_bid_team.id == stat.team.id %}last-bidder{% endif %}" 
                      data-team-id="{{ stat.team.id }}"
-                     onclick="quickBid({{ stat.team.id }}, '{{ stat.team.name }}')">
+                     onclick="quickBid({{ stat.team.id }}, '{{ stat.team.name|escapejs }}')">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="flex-grow-1">
-                            <h6 class="mb-1 text-white">
+                            <h6 class="mb-1">
                                 {{ stat.team.name }}
                                 {% if stat.can_bid %}
                                     <span class="badge bg-success ms-2">Ready</span>
                                 {% else %}
                                     <span class="badge bg-danger ms-2">
-                                        {% if not stat.team.can_buy_player %}Full{% else %}Low Purse{% endif %}
+                                        {% if stat.slots_remaining <= 0 %}Full{% else %}Low Purse{% endif %}
                                     </span>
                                 {% endif %}
                             </h6>
                             <div class="small text-muted">
-                                <i class="bi bi-wallet2"></i> ₹{{ stat.purse_remaining }}
+                                <i class="bi bi-wallet2"></i> ₹{{ stat.purse_remaining|floatformat:0 }}
                                 <span class="ms-2">
                                     <i class="bi bi-people"></i> {{ stat.players_count }}/{{ stat.team.max_players }}
+                                    {% if stat.iconic_count > 0 %}
+                                        <span class="badge bg-warning text-dark">{{ stat.iconic_count }} Iconic</span>
+                                    {% endif %}
                                 </span>
                             </div>
                             
@@ -298,12 +358,20 @@ body {
                         <div class="ms-3">
                             {% if stat.can_bid %}
                             <button class="quick-bid-btn" 
-                                    onclick="event.stopPropagation(); quickBid({{ stat.team.id }}, '{{ stat.team.name }}')">
+                                    onclick="event.stopPropagation(); quickBid({{ stat.team.id }}, '{{ stat.team.name|escapejs }}')">
                                 <i class="bi bi-gavel"></i> Bid
+                            </button>
+                            {% else %}
+                            <button class="btn btn-secondary" disabled>
+                                <i class="bi bi-x-circle"></i>
                             </button>
                             {% endif %}
                         </div>
                     </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-3">
+                    No teams available
                 </div>
                 {% endfor %}
             </div>
@@ -311,7 +379,7 @@ body {
         
         <!-- Player Queue with SEARCH -->
         <div class="control-panel">
-            <h5 class="text-white mb-3">
+            <h5 class="text-dark mb-3">
                 <i class="bi bi-list-ul"></i> Player Queue
             </h5>
             
@@ -320,7 +388,7 @@ body {
                 <div class="input-group">
                     <input type="text" 
                            name="search" 
-                           class="form-control search-box" 
+                           class="form-control" 
                            placeholder="Search player name, roll no..." 
                            value="{{ search_query }}"
                            autocomplete="off">
@@ -337,10 +405,10 @@ body {
             
             <div style="max-height: 300px; overflow-y: auto;">
                 {% for player in available_players %}
-                <div class="player-queue-item" onclick="startPlayer({{ player.id }}, '{{ player.user.get_full_name }}')">
+                <div class="player-queue-item" onclick="startPlayer({{ player.id }}, '{{ player.user.get_full_name|escapejs }}')">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <strong>{{ player.user.get_full_name }}</strong>
+                            <strong class="text-dark">{{ player.user.get_full_name }}</strong>
                             <br>
                             <small class="text-muted">
                                 {{ player.get_category_display }} • ₹{{ player.base_price }}
@@ -349,7 +417,7 @@ body {
                                 {% endif %}
                             </small>
                         </div>
-                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); startPlayer({{ player.id }}, '{{ player.user.get_full_name }}')">
+                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); startPlayer({{ player.id }}, '{{ player.user.get_full_name|escapejs }}')">
                             <i class="bi bi-play-fill"></i>
                         </button>
                     </div>
@@ -371,12 +439,12 @@ body {
 <!-- Recent Sales -->
 {% if recent_sales %}
 <div class="control-panel mt-4">
-    <h5 class="text-white mb-3">
+    <h5 class="text-dark mb-3">
         <i class="bi bi-receipt"></i> Recent Sales
     </h5>
     <div class="table-responsive">
-        <table class="table table-dark table-hover">
-            <thead>
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
                 <tr>
                     <th>Player</th>
                     <th>Team</th>
@@ -390,7 +458,7 @@ body {
                 <tr>
                     <td>{{ sale.player.user.get_full_name }}</td>
                     <td>{% if sale.sold %}{{ sale.winning_team.name }}{% else %}-{% endif %}</td>
-                    <td class="text-warning">₹{{ sale.final_amount }}</td>
+                    <td class="text-warning fw-bold">₹{{ sale.final_amount }}</td>
                     <td>
                         {% if sale.sold %}
                             <span class="badge bg-success">SOLD</span>
@@ -398,7 +466,7 @@ body {
                             <span class="badge bg-secondary">UNSOLD</span>
                         {% endif %}
                     </td>
-                    <td>{{ sale.timestamp|date:"H:i:s" }}</td>
+                    <td class="text-muted">{{ sale.timestamp|date:"H:i:s" }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -427,7 +495,7 @@ body {
 const csrfToken = '{{ csrf_token }}';
 let currentPlayerId = parseInt(document.getElementById('currentPlayerId').value) || null;
 let processingBid = false;
-let processingComplete = false;  // NEW: Track if completing sale
+let processingComplete = false;
 
 // Show toast notification
 function showToast(message, type = 'info') {
@@ -435,7 +503,7 @@ function showToast(message, type = 'info') {
     toast.className = `alert alert-${type} alert-dismissible fade show`;
     toast.innerHTML = `
         ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
     `;
     document.getElementById('toastContainer').appendChild(toast);
     
@@ -448,9 +516,9 @@ function disableControlButtons(message = '') {
     const unsoldBtn = document.getElementById('unsoldBtn');
     const goingBtn = document.getElementById('goingBtn');
     
-    soldBtn.disabled = true;
-    unsoldBtn.disabled = true;
-    goingBtn.disabled = true;
+    if (soldBtn) soldBtn.disabled = true;
+    if (unsoldBtn) unsoldBtn.disabled = true;
+    if (goingBtn) goingBtn.disabled = true;
     
     if (message) {
         document.getElementById('controlStatus').innerHTML = 
@@ -464,9 +532,9 @@ function enableControlButtons() {
     const unsoldBtn = document.getElementById('unsoldBtn');
     const goingBtn = document.getElementById('goingBtn');
     
-    soldBtn.disabled = false;
-    unsoldBtn.disabled = false;
-    goingBtn.disabled = false;
+    if (soldBtn) soldBtn.disabled = false;
+    if (unsoldBtn) unsoldBtn.disabled = false;
+    if (goingBtn) goingBtn.disabled = false;
     
     document.getElementById('controlStatus').innerHTML = '';
 }
@@ -543,10 +611,10 @@ function addBidToHistory(teamName, amount, timestamp) {
     bidItem.innerHTML = `
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <strong>${teamName}</strong>
+                <strong class="text-dark">${teamName}</strong>
                 <small class="ms-2 text-muted">${new Date(timestamp).toLocaleTimeString()}</small>
             </div>
-            <div class="fs-5 text-warning">₹${amount}</div>
+            <div class="fs-5 text-warning fw-bold">₹${amount}</div>
         </div>
     `;
     historyContainer.insertBefore(bidItem, historyContainer.firstChild);
@@ -601,7 +669,7 @@ async function startPlayer(playerId, playerName) {
             
             if (data.success) {
                 showToast(`Started bidding for ${playerName}`, 'success');
-                location.reload();  // Reload to show new player
+                setTimeout(() => location.reload(), 1000);
             } else {
                 showToast(data.message, 'danger');
             }
@@ -645,7 +713,6 @@ async function callGoing() {
 async function completeSale() {
     if (!currentPlayerId) return;
     
-    // CRITICAL FIX: Prevent double-clicking
     if (processingComplete) {
         showToast('Already processing sale, please wait...', 'warning');
         return;
@@ -675,7 +742,6 @@ async function completeSale() {
             
             setTimeout(() => location.reload(), 2000);
         } else {
-            // Check if already processed
             if (data.already_processed) {
                 showToast(data.message, 'warning');
                 setTimeout(() => location.reload(), 1500);
@@ -694,14 +760,12 @@ async function completeSale() {
 
 // Mark as unsold
 function markUnsold() {
-    completeSale();  // Uses same endpoint
+    completeSale();
 }
 
 // Play bid sound
 function playBidSound() {
     // Optional: Add audio file
-    // const audio = new Audio('/static/sounds/bid.mp3');
-    // audio.play();
 }
 
 // Keyboard shortcuts
